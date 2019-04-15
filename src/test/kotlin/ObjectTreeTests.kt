@@ -107,4 +107,9 @@ class ObjectTreeTests {
         assertNotNull(testTree.get("/obj/test/test2/test3"))
         assertNotNull(testTree.get("/obj/test/test2/test3/test4"))
     }
+
+    @Test
+    fun `deriveInstance inherits properly`() {
+        testTree = ObjectTree()
+    }
 }

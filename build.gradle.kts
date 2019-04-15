@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
+    jacoco
     kotlin("jvm") version "1.3.21"
     id("com.gradle.build-scan") version "2.2.1"
 }
@@ -9,6 +10,10 @@ plugins {
 buildScan {
     termsOfServiceUrl = "https://gradle.com/terms-of-service"
     termsOfServiceAgree = "yes"
+}
+
+jacoco {
+    reportsDir = file("$buildDir/test-results/jacoco")
 }
 
 group = "ninja.actio"

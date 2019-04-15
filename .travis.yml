@@ -10,6 +10,7 @@ addons:
 
 script:
   - ./gradlew build --scan -s
+  - ./gradlew jacocoTestReport
   - sonar-scanner
 
 before_cache:
