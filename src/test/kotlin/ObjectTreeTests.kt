@@ -8,6 +8,8 @@ class ObjectTreeTests {
 
     @Test
     fun `Default Types Are Set Correctly`() {
+        testTree = ObjectTree()
+
         assertNotNull(testTree.get("/datum"))
         assertEquals("null", testTree.get("/datum").getVarValue("tag"))
 
@@ -49,16 +51,16 @@ class ObjectTreeTests {
         assertEquals("list()", testTree.get("/atom").getVarValue("verbs"))
 
         assertNotNull(testTree.get("/atom/movable"))
-        assertEquals("1", testTree.get("/atom/moveable").getVarValue("animate_movement"))
-        assertEquals("0", testTree.get("/atom/moveable").getVarValue("bound_x"))
-        assertEquals("0", testTree.get("/atom/moveable").getVarValue("bound_y"))
-        assertEquals("32", testTree.get("/atom/moveable").getVarValue("bound_width"))
-        assertEquals("32", testTree.get("/atom/moveable").getVarValue("bound_height"))
-        assertEquals("0", testTree.get("/atom/moveable").getVarValue("glide_size"))
-        assertEquals("null", testTree.get("/atom/moveable").getVarValue("screen_loc"))
-        assertEquals("32", testTree.get("/atom/moveable").getVarValue("step_size"))
-        assertEquals("0", testTree.get("/atom/moveable").getVarValue("step_x"))
-        assertEquals("0", testTree.get("/atom/moveable").getVarValue("step_y"))
+        assertEquals("1", testTree.get("/atom/movable").getVarValue("animate_movement"))
+        assertEquals("0", testTree.get("/atom/movable").getVarValue("bound_x"))
+        assertEquals("0", testTree.get("/atom/movable").getVarValue("bound_y"))
+        assertEquals("32", testTree.get("/atom/movable").getVarValue("bound_width"))
+        assertEquals("32", testTree.get("/atom/movable").getVarValue("bound_height"))
+        assertEquals("0", testTree.get("/atom/movable").getVarValue("glide_size"))
+        assertEquals("null", testTree.get("/atom/movable").getVarValue("screen_loc"))
+        assertEquals("32", testTree.get("/atom/movable").getVarValue("step_size"))
+        assertEquals("0", testTree.get("/atom/movable").getVarValue("step_x"))
+        assertEquals("0", testTree.get("/atom/movable").getVarValue("step_y"))
 
         assertNotNull(testTree.get("/area"))
         assertEquals("1", testTree.get("/area").getVarValue("layer"))
@@ -84,5 +86,25 @@ class ObjectTreeTests {
         assertEquals("/turf", testTree.get("/world").getVarValue("turf"))
         assertEquals("/mob", testTree.get("/world").getVarValue("mob"))
         assertEquals("/area", testTree.get("/world").getVarValue("area"))
+    }
+
+    @Test
+    fun `Tree is structured correctly`() {
+        testTree = ObjectTree()
+        val testObject = testTree.getOrCreate("/obj/test")
+
+        assertNotNull(testTree.get("/obj/test"))
+        assertEquals(testTree.get("/obj"), testObject.parent)
+    }
+
+    @Test
+    fun `getOrCreate Recurses Properly`() {
+        testTree = ObjectTree()
+        val testObject = testTree.getOrCreate("/obj/test/test2/test3/test4")
+
+        assertNotNull(testTree.get("/obj/test"))
+        assertNotNull(testTree.get("/obj/test/test2"))
+        assertNotNull(testTree.get("/obj/test/test2/test3"))
+        assertNotNull(testTree.get("/obj/test/test2/test3/test4"))
     }
 }
