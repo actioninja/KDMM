@@ -1,5 +1,3 @@
-package ninja.actio.kdmm.test
-
 import ninja.actio.kdmm.dm.objecttree.ObjectTree
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -49,6 +47,5 @@ class ObjectTreeTests {
         assertEquals("null", emptyTree.get("/atom").getVar("transform"))
         assertEquals("list()", emptyTree.get("/atom").getVar("underlays"))
         assertEquals("list()", emptyTree.get("/atom").getVar("verbs"))
-
     }
 }

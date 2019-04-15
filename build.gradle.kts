@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
-    kotlin("jvm") version "1.3.20"
+    kotlin("jvm") version "1.3.21"
     id("com.gradle.build-scan") version "2.2.1"
 }
 
@@ -23,6 +23,10 @@ sourceSets {
         java.srcDir("src/test/kotlin")
         resources.srcDir("src/test/resources")
     }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 dependencies {
