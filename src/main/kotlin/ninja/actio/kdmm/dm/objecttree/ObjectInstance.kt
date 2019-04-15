@@ -37,7 +37,7 @@ class ObjectInstance(val vars: MutableMap<String, DMVar>, val parent: ObjectTree
     override fun equals(other: Any?): Boolean {
         if(other !is ObjectInstance)
             return false
-        if(other == this)
+        if(other === this)
             return true
         if(other.toStringDM() == toStringDM())
             return true
