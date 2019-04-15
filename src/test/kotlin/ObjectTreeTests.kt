@@ -1,3 +1,5 @@
+import ninja.actio.kdmm.dm.objecttree.DMVar
+import ninja.actio.kdmm.dm.objecttree.InstanceFactory
 import ninja.actio.kdmm.dm.objecttree.ObjectTree
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -111,5 +113,22 @@ class ObjectTreeTests {
     @Test
     fun `deriveInstance inherits properly`() {
         testTree = ObjectTree()
+        val testObject1 = testTree.getOrCreate("/obj/test")
+        val testObjectDefaultInstance = testObject1.instances[0]
+        val diffVars1 = mapOf(
+            "test1" to DMVar("test1"),
+            "test2" to DMVar("test2")
+        )
+        val instance2 = InstanceFactory.deriveFrom(testObjectDefaultInstance, diffVars1)
+        assertEquals("test1", instance2.getVarValue("test1"))
+        assertEquals("test2", instance2.getVarValue("test2"))
+        val diffVars2 = mapOf(
+            "test2" to DMVar("OVERRIDDEN"),
+            "test3" to DMVar("test3")
+        )
+        val instance3 = InstanceFactory.deriveFrom(instance2, diffVars2)
+        assertEquals("test1", instance3.getVarValue("test1"))
+        assertEquals("OVERRIDDEN", instance3.getVarValue("test2"))
+        assertEquals("test3", instance3.getVarValue("test3"))
     }
 }
