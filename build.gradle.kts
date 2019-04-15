@@ -34,6 +34,12 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+tasks.jacocoTestReport {
+    reports {
+        xml.isEnabled = true
+    }
+}
+
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.uchuhimo", "kotlinx-bimap", "1.2")
