@@ -18,9 +18,20 @@ application {
     mainClassName = "ninja.actio.kdmm.KDMMKt"
 }
 
+sourceSets {
+    test {
+        java.srcDir("src/test/kotlin")
+        resources.srcDir("src/test/resources")
+    }
+}
+
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.uchuhimo", "kotlinx-bimap", "1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.2.70")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 }
 
 repositories {

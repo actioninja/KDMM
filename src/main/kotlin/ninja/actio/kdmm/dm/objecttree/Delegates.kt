@@ -19,6 +19,7 @@ class DMVarNumberDelegate<T>(val valueFunc: () -> T) {
                 println("Bad number in var: $valueFunc")
             }
         }
+        @Suppress("UNCHECKED_CAST") //Intentional; if this throws an error something is wrong with the parser
         return cache as T
     }
 }
