@@ -101,6 +101,7 @@ class ObjectTree {
         world.setVar("turf", "/turf")
         world.setVar("mob", "/mob")
         world.setVar("area", "/area")
+        addItem(world)
 
         // Empty path, this will be resolved as project root by filePath.
         fileDirs.add(Paths.get(""))
