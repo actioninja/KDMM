@@ -8,6 +8,10 @@ plugins {
 group = "ninja.actio"
 version = "0.1"
 
+application {
+    mainClassName = "ninja.actio.kdmm.KDMMKt"
+}
+
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.uchuhimo", "kotlinx-bimap", "1.2")
