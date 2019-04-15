@@ -15,7 +15,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
             parent.subtypes.add(this)
             setVar("parentType", parent.path)
         }
-        //TODO: default instance
+        instances.add(InstanceFactory.deriveFrom(this))
     }
 
 
