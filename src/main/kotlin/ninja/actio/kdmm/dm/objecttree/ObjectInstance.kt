@@ -8,7 +8,7 @@ class ObjectInstance(val vars: MutableMap<String, DMVar>, val parent: ObjectTree
     override fun getVar(key: String): DMVar {
         if(vars.containsKey(key))
             return vars[key]!!
-        return parent.getVarValue(key)
+        return parent.getVar(key)
     }
 
     override fun toStringDM(tgm: Boolean): String {

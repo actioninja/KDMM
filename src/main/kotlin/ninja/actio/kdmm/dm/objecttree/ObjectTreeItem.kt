@@ -19,11 +19,11 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
     }
 
 
-    override fun getVarValue(key: String): DMVar {
+    override fun getVar(key: String): DMVar {
         if(vars.containsKey(key))
             return vars[key]!!
         if(parent != null)
-            return parent.getVarValue(key)
+            return parent.getVar(key)
         return DMVar("null")
     }
 
