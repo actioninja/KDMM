@@ -1,7 +1,4 @@
 import ninja.actio.kdmm.dm.objecttree.ObjectTree
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class ObjectTreeTests {
     private val emptyTree = ObjectTree()
@@ -47,5 +44,7 @@ class ObjectTreeTests {
         assertEquals("null", emptyTree.get("/atom").getVar("transform"))
         assertEquals("list()", emptyTree.get("/atom").getVar("underlays"))
         assertEquals("list()", emptyTree.get("/atom").getVar("verbs"))
+
+        assertNotNull(emptyTree.get("/atom/movable"))
     }
 }

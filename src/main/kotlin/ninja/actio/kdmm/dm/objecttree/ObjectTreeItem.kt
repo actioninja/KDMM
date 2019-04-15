@@ -5,34 +5,38 @@ import java.util.*
 class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMObject() {
 
     val subtypes = mutableListOf<ObjectTreeItem>()
-    val vars = TreeMap<String, String>()
+    val vars = TreeMap<String, DMVar>()
     val instances = mutableListOf<ObjectInstance>()
 
     init {
         path = path.trim()
-        vars["type"] = path
+        setVar("type", "path")
         if(parent != null) {
             parent.subtypes.add(this)
-            vars["parentType"] = parent.path
+            setVar("parentType", parent.path)
         }
         //TODO: default instance
     }
 
 
-    override fun getVar(key: String): String {
+    override fun getVar(key: String): DMVar {
         if(vars.containsKey(key))
             return vars[key]!!
         if(parent != null)
             return parent.getVar(key)
-        return "null"
+        return DMVar("null")
     }
 
     fun setVar(key: String, value: String) {
-        vars[key] = value
+        if(!vars.contains(key)) {
+            vars[key] = DMVar(value)
+        } else {
+            vars[key]!!.value = value
+        }
     }
 
-    fun getAllVars(): Map<String, String> {
-        val allVars = mutableMapOf<String, String>()
+    fun getAllVars(): Map<String, DMVar> {
+        val allVars = mutableMapOf<String, DMVar>()
         if(parent != null)
             allVars.putAll(parent.getAllVars())
         allVars.putAll(vars)

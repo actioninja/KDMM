@@ -1,11 +1,11 @@
 package ninja.actio.kdmm.dm.objecttree
 
-class ObjectInstance(val vars: MutableMap<String, String>, val parent: ObjectTreeItem): DMObject() {
+class ObjectInstance(val vars: MutableMap<String, DMVar>, val parent: ObjectTreeItem): DMObject() {
 
     val parentType: String
         get() = parent.path
 
-    override fun getVar(key: String): String {
+    override fun getVar(key: String): DMVar {
         if(vars.containsKey(key))
             return vars[key]!!
         return parent.getVar(key)
@@ -27,7 +27,7 @@ class ObjectInstance(val vars: MutableMap<String, String>, val parent: ObjectTre
                     out.append(" ")
             out.append(key)
             out.append(" = ")
-            out.append(value)
+            out.append(value.value)
         }
         if(tgm) out.append("\n\t")
         out.append('}')
