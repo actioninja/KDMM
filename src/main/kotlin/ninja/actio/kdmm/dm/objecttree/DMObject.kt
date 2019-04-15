@@ -6,8 +6,7 @@ import java.util.regex.Pattern
 abstract class DMObject {
     abstract fun getVar(key: String): String
     abstract fun isType(typePath: String): Boolean
-    abstract fun toStringDMM(): String
-    abstract fun toStringTGM(): String
+    abstract fun toStringDM(tgm: Boolean = false): String
 
     val dirDelegate = DMVarNumberDelegate { getVar("dir").toInt() }
     val dir: Int by dirDelegate

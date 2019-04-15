@@ -1,8 +1,9 @@
 package ninja.actio.kdmm.dm.objecttree
 
+import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-
+import java.util.regex.Pattern
 
 
 class ObjectTree {
@@ -105,14 +106,58 @@ class ObjectTree {
         fileDirs.add(Paths.get(""))
     }
 
-
-
     fun get(path: String): ObjectTreeItem {
         return items[path]!! //TODO: make null safe
+    }
+
+    fun getOrCreate(path: String): ObjectTreeItem {
+        if(items.containsKey(path))
+            return items[path]!!
+
+        val parentPath = if(path.indexOf("/") != path.lastIndexOf("/"))
+            path.substring(0, path.lastIndexOf("/"))
+        else
+            "/datum"
+
+        val parentItem = getOrCreate(parentPath)
+        val item = ObjectTreeItem(path, parentItem)
+        items[path] = item
+        return item
     }
 
     fun addItem(item: ObjectTreeItem) {
         items[item.path] = item
     }
+
+    fun dumpTree(stream: PrintStream) {
+        for(item in items.values) {
+            stream.println(item.path)
+            for(dmVar in item.vars.entries.toSet()) {
+                stream.println("\t${dmVar.key} = ${dmVar.value}")
+            }
+        }
+    }
+
+    val global: ObjectTreeItem
+        get() = items[""]!!
+
+    /*
+    fun completeTree() {
+        for(item in items.values) {
+            item.subtypes.clear()
+
+            for(entry in item.vars.entries.toSet()) {
+                var value = entry.value
+                var oldValue = ""
+                try {
+                    while(oldValue != value) {
+                        oldValue = value
+                        val matcher = Pattern.compile()
+                    }
+                }
+            }
+        }
+    }
+    */
 
 }
