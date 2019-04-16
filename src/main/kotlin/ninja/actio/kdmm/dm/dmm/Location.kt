@@ -18,7 +18,7 @@ data class Location(
 
     fun getStep(dir: Int): Location {
         val loc = Location(x, y, z)
-        when(dir) {
+        when (dir) {
             NORTH -> loc.y++
             SOUTH -> loc.y--
             EAST -> loc.x++

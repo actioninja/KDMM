@@ -3,7 +3,6 @@ package ninja.actio.kdmm.dm.objecttree
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.regex.Pattern
 
 
 class ObjectTree {
@@ -21,7 +20,7 @@ class ObjectTree {
         datum.setVar("tag", "null")
         addItem(datum)
 
-        val atom = ObjectTreeItem( "/atom", datum)
+        val atom = ObjectTreeItem("/atom", datum)
         atom.setVar("alpha", "255")
         atom.setVar("appearance_flags", "0")
         atom.setVar("blend_mode", "0")
@@ -73,7 +72,7 @@ class ObjectTree {
         movable.setVar("step_y", "0")
         addItem(movable)
 
-        val area = ObjectTreeItem( "/area", atom)
+        val area = ObjectTreeItem("/area", atom)
         area.setVar("layer", "1")
         area.setVar("luminosity", "1")
         addItem(area)
@@ -112,10 +111,10 @@ class ObjectTree {
     }
 
     fun getOrCreate(path: String): ObjectTreeItem {
-        if(items.containsKey(path))
+        if (items.containsKey(path))
             return items[path]!!
 
-        val parentPath = if(path.indexOf("/") != path.lastIndexOf("/"))
+        val parentPath = if (path.indexOf("/") != path.lastIndexOf("/"))
             path.substring(0, path.lastIndexOf("/"))
         else
             "/datum"
@@ -131,9 +130,9 @@ class ObjectTree {
     }
 
     fun dumpTree(stream: PrintStream) {
-        for(item in items.values) {
+        for (item in items.values) {
             stream.println(item.path)
-            for(dmVar in item.vars.entries.toSet()) {
+            for (dmVar in item.vars.entries.toSet()) {
                 stream.println("\t${dmVar.key} = ${dmVar.value}")
             }
         }

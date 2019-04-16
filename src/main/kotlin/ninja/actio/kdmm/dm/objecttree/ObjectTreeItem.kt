@@ -21,7 +21,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
     init {
         path = path.trim()
         setVar("type", path)
-        if(parent != null) {
+        if (parent != null) {
             parent.subtypes.add(this)
             setVar("parentType", parent.path)
         }
@@ -30,15 +30,15 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
 
 
     override fun getVar(key: String): DMVar {
-        if(vars.containsKey(key))
+        if (vars.containsKey(key))
             return vars[key]!!
-        if(parent != null)
+        if (parent != null)
             return parent.getVar(key)
         return DMVar("null")
     }
 
     fun setVar(key: String, value: String) {
-        if(!vars.contains(key)) {
+        if (!vars.contains(key)) {
             vars[key] = DMVar(value)
         } else {
             vars[key]!!.value = value
@@ -47,22 +47,22 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
 
     fun getAllVars(): Map<String, DMVar> {
         val allVars = mutableMapOf<String, DMVar>()
-        if(parent != null)
+        if (parent != null)
             allVars.putAll(parent.getAllVars())
         allVars.putAll(vars)
         return allVars
     }
 
     override fun isType(typePath: String): Boolean {
-        if(path == typePath)
+        if (path == typePath)
             return true
-        if(parent != null)
+        if (parent != null)
             return parent.isType(typePath)
         return false
     }
 
     fun addInstance(instance: ObjectInstance) {
-        if(instances.contains(instance))
+        if (instances.contains(instance))
             return
         instances.add(instance)
         instances.sortBy { it.toStringDM() }
@@ -71,7 +71,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
 
     fun removeInstance(instance: ObjectInstance) {
         val index = instances.indexOf(instance)
-        if(index == -1)
+        if (index == -1)
             return
         instances.remove(instance)
         //TODO: listeners

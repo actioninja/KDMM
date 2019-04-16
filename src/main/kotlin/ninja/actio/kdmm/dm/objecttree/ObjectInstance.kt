@@ -5,7 +5,7 @@ import java.awt.Color
 class ObjectInstance(
     val parent: ObjectTreeItem,
     val vars: MutableMap<String, DMVar> = mutableMapOf()
-): DMObject() {
+) : DMObject() {
 
     override val dir: Int by lazy { getVarValue("dir").toInt() }
     override val pixelX: Int by lazy { getVarValue("pixel_x").toInt() }
@@ -20,14 +20,14 @@ class ObjectInstance(
         get() = parent.path
 
     override fun getVar(key: String): DMVar {
-        if(vars.containsKey(key))
+        if (vars.containsKey(key))
             return vars[key]!!
         return parent.getVar(key)
     }
 
     override fun toStringDM(tgm: Boolean): String {
         val out = StringBuilder(parentType)
-        if(vars.isNotEmpty()) {
+        if (vars.isNotEmpty()) {
             out.append('{')
             if (tgm) out.append("\n\t")
             var isFirst = true
@@ -53,11 +53,11 @@ class ObjectInstance(
     }
 
     override fun equals(other: Any?): Boolean {
-        if(other !is ObjectInstance)
+        if (other !is ObjectInstance)
             return false
-        if(other === this)
+        if (other === this)
             return true
-        if(other.toStringDM() == toStringDM())
+        if (other.toStringDM() == toStringDM())
             return true
         return false
     }
@@ -65,7 +65,4 @@ class ObjectInstance(
     override fun isType(typePath: String): Boolean {
         return parent.isType(typePath)
     }
-
-
-
 }

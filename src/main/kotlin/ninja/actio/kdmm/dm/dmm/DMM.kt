@@ -9,7 +9,6 @@ data class DMM(
     var maxZ: Int = 1,
     var keyLength: Int = 0
     //val instances
-)
-{
+) {
 
 }

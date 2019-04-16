@@ -23,20 +23,21 @@ abstract class DMObject {
     abstract val icon: String
     abstract val iconState: String
     fun getColor(string: String): Color {
-        if(string.startsWith('#'))
+        if (string.startsWith('#'))
             return Color.decode(string)
         var m = Pattern.compile("rgb ?\\( ?([\\d]+) ?, ?([\\d]+) ?, ?([\\d]+) ?\\)").matcher(string)
-        if(m.find()) {
+        if (m.find()) {
             val r = m.group(1).toInt()
             val g = m.group(2).toInt()
             val b = m.group(3).toInt()
             return Color(r, g, b)
         }
-        m = Pattern.compile("(black|silver|grey|gray|white|maroon|red|purple|fuchsia|magenta|green|lime|olive|gold|yellow|navy|blue|teal|aqua|cyan)")
-            .matcher(
-                string
-            )
-        if(m.find())
+        m =
+            Pattern.compile("(black|silver|grey|gray|white|maroon|red|purple|fuchsia|magenta|green|lime|olive|gold|yellow|navy|blue|teal|aqua|cyan)")
+                .matcher(
+                    string
+                )
+        if (m.find())
             return when (m.group(1)) {
                 "black" -> Color.decode("#000000")
                 "silver" -> Color.decode("#C0C0C0")
@@ -62,6 +63,7 @@ abstract class DMObject {
             }
         return Color(255, 255, 255)
     }
+
     abstract val dmColor: Color
 }
 

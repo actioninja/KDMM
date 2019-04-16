@@ -10,4 +10,4 @@ data class DMVar(
     var value: String,
     var type: DMVarType = DMVarType.STRING,
     var dangerous: Boolean = false
-    )
+)
