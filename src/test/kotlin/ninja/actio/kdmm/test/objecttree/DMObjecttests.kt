@@ -114,4 +114,14 @@ class DMObjecttests {
         assertEquals("test1", child.getVarValue("test1"))
         assertEquals("test2", child.getVarValue("test2"))
     }
+
+    @Test
+    fun `isType works`() {
+        val parent = ObjectTreeItem("/datum")
+        val child = ObjectTreeItem("/datum/test", parent)
+
+        assert(parent.isType("/datum"))
+        assert(child.isType("/datum/test"))
+        assert(child.isType("/datum"))
+    }
 }
