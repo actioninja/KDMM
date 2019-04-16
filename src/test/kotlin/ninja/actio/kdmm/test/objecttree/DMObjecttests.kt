@@ -71,6 +71,23 @@ class DMObjecttests {
     }
 
     @Test
+    fun `setVar and getVar full execution`() {
+        val test1 = ObjectTreeItem("/datum")
+        val test2 = ObjectTreeItem("/datum/test", test1)
+
+        test1.setVar("testNumber", 10)
+        test1.setVar("testNumber", 11)
+        test1.setVar("testString", "Bla")
+        test1.setVar("testString", "Alb")
+        test2.setVar("testNumber2", 20)
+        test2.setVar("testString2", "Bla2")
+
+        assertEquals("11", test1.getVarValue("testNumber"))
+        assertEquals(DMVar("null"), test1.getVar("FAKE"))
+        assertEquals("Alb", test2.getVar("testString").value)
+    }
+
+    @Test
     fun `Parse instance string with no vars`() {
         testTree = ObjectTree()
         val ogInstance = testTree.getOrCreate("/obj/test")
