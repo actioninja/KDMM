@@ -36,8 +36,7 @@ class ObjectInstance(
                     isFirst = false
                 else
                     out.append(";")
-                if (tgm)
-                    out.append("\n\t")
+                if (tgm) out.append("\n\t")
                 else
                     out.append(" ")
                 out.append(key)
