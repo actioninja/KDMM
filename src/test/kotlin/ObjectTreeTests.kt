@@ -1,7 +1,4 @@
-import ninja.actio.kdmm.dm.objecttree.DMVar
-import ninja.actio.kdmm.dm.objecttree.InstanceFactory
-import ninja.actio.kdmm.dm.objecttree.ObjectTree
-import ninja.actio.kdmm.dm.objecttree.ObjectTreeItem
+import ninja.actio.kdmm.dm.objecttree.*
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import kotlin.test.assertEquals
@@ -169,5 +166,40 @@ class ObjectTreeTests {
             testObject.setVar("color", colorName)
             assertEquals(color, testObject.dmColor)
         }
+    }
+
+    @Test
+    fun `Parse no var instance string`() {
+        testTree = ObjectTree()
+        val ogInstance = testTree.getOrCreate("/obj/test")
+
+        val newInstance = InstanceFactory.parseStringToInstace(testTree, "/obj/test")
+        assertEquals(newInstance.toStringDM(), ogInstance.toStringDM())
+    }
+
+    @Test
+    fun `Parse var instance string`() {
+        testTree = ObjectTree()
+        val testObject = testTree.getOrCreate("/obj/test")
+        testObject.setVar("test1", "test1")
+        testObject.setVar("test2", "test2")
+
+        val parsedInstance = InstanceFactory.parseStringToInstace(
+            testTree,
+            "/obj/test{test2 = \"OVERRIDDEN\"; test3 = \"test3\"}"
+        )
+        /*
+        assertEquals("test1", parsedInstance.getVarValue("test1"))
+        assertEquals("OVERRIDDEN", parsedInstance.getVarValue("test2"))
+        assertEquals("test3", parsedInstance.getVarValue("test3"))
+        */
+    }
+
+    @Test
+    fun `Parser rejects bad strings`() {
+        testTree = ObjectTree()
+        val badInstance = InstanceFactory.parseStringToInstace(testTree, "aaaaaa/{{")
+
+        assertEquals(ObjectInstance(mutableMapOf(), ObjectTreeItem("")), badInstance)
     }
 }

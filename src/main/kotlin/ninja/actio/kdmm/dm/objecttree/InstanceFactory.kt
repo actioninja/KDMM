@@ -17,7 +17,7 @@ object InstanceFactory {
         }
     }
 
-    fun parseStringToInstace(string: String, tree: ObjectTree): ObjectInstance {
+    fun parseStringToInstace(tree: ObjectTree, string: String): ObjectInstance {
         if(!string.contains('{'))
             return deriveFrom(tree.get(string))
 
@@ -30,8 +30,7 @@ object InstanceFactory {
                 vars[varMatcher.group(1)] = DMVar(varMatcher.group(2))
             }
             val parent = tree.get(m.group(1))
-            val outInstance = ObjectInstance(vars, parent)
-            parent.addInstance(outInstance)
+            return deriveFrom(parent, vars)
         }
 
         System.out.println("Bad string passed to instance parser")
