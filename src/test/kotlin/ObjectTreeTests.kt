@@ -104,7 +104,7 @@ class ObjectTreeTests {
     @Test
     fun `getOrCreate recurses properly`() {
         testTree = ObjectTree()
-        val testObject = testTree.getOrCreate("/obj/test/test2/test3/test4")
+        testTree.getOrCreate("/obj/test/test2/test3/test4")
 
         assertNotNull(testTree.get("/obj/test"))
         assertNotNull(testTree.get("/obj/test/test2"))
