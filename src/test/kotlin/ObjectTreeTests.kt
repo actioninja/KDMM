@@ -169,7 +169,7 @@ class ObjectTreeTests {
     }
 
     @Test
-    fun `Parse no var instance string`() {
+    fun `Parse instance string with no vars`() {
         testTree = ObjectTree()
         val ogInstance = testTree.getOrCreate("/obj/test")
 
@@ -178,7 +178,7 @@ class ObjectTreeTests {
     }
 
     @Test
-    fun `Parse var instance string`() {
+    fun `Parse instance string with vars`() {
         testTree = ObjectTree()
         val testObject = testTree.getOrCreate("/obj/test")
         testObject.setVar("test1", "test1")
