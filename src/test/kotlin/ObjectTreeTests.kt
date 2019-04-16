@@ -186,11 +186,12 @@ class ObjectTreeTests {
 
         val parsedInstance = InstanceFactory.parseStringToInstace(
             testTree,
-            "/obj/test{test2 = \"OVERRIDDEN\"; test3 = \"test3\"}"
+            "/obj/test{test2 = \"OVERRIDDEN\"; test3 = \"test3\"; test4 = 9}"
         )
         assertEquals("test1", parsedInstance.getVarValue("test1"))
         assertEquals("OVERRIDDEN", parsedInstance.getVarValue("test2"))
         assertEquals("test3", parsedInstance.getVarValue("test3"))
+        assertEquals("9", parsedInstance.getVarValue("test4"))
     }
 
     @Test
