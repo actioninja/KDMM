@@ -59,13 +59,15 @@ class DMObjecttests {
             "blue" to Color.decode("#0000FF"),
             "teal" to Color.decode("#008080"),
             "aqua" to Color.decode("#00FFFF"),
-            "cyan" to Color.decode("#00FFFF")
+            "cyan" to Color.decode("#00FFFF"),
+            "AAAAAAAAbbb" to Color.decode("#FFFFFF")
         )
         for ((colorName, color) in namedColorList) {
             testObject = ObjectTreeItem("/test")
             testObject.setVar("color", colorName)
             assertEquals(color, testObject.dmColor)
         }
+
     }
 
     @Test
