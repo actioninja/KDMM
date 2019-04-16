@@ -14,30 +14,30 @@ abstract class DMObject {
 
     }
 
-    val dir: Int by lazy { getVarValue("dir").toInt() }
-    val pixelX: Int by lazy { getVarValue("pixel_x").toInt() }
-    val pixelY: Int by lazy { getVarValue("pixel_y").toInt() }
-    val plane: Int by lazy { getVarValue("plane").toInt() }
-    val layer: Float by lazy { getVarValue("layer").toFloat() }
-    val icon: String by lazy { getVarValue("icon") }
-    val iconState: String by lazy { getVarValue("icon_state") }
-    val dmColor: Color by lazy {
-        val varValue = getVarValue("color")
-        if(varValue.startsWith('#'))
-            Color.decode(varValue)
-        var m = Pattern.compile("rgb ?\\( ?([\\d]+) ?, ?([\\d]+) ?, ?([\\d]+) ?\\)").matcher(varValue)
+    //lazy works kind of weird with inheritance, this is a hack to make sure it works as expected
+    abstract val dir: Int
+    abstract val pixelX: Int
+    abstract val pixelY: Int
+    abstract val plane: Int
+    abstract val layer: Float
+    abstract val icon: String
+    abstract val iconState: String
+    fun getColor(string: String): Color {
+        if(string.startsWith('#'))
+            return Color.decode(string)
+        var m = Pattern.compile("rgb ?\\( ?([\\d]+) ?, ?([\\d]+) ?, ?([\\d]+) ?\\)").matcher(string)
         if(m.find()) {
             val r = m.group(1).toInt()
             val g = m.group(2).toInt()
             val b = m.group(3).toInt()
-            Color(r, g, b)
+            return Color(r, g, b)
         }
-        m = Pattern.compile("\"(black|silver|grey|gray|white|maroon|red|purple|fuchsia|magenta|green|lime|olive|gold|yellow|navy|blue|teal|aqua|cyan)\"")
+        m = Pattern.compile("(black|silver|grey|gray|white|maroon|red|purple|fuchsia|magenta|green|lime|olive|gold|yellow|navy|blue|teal|aqua|cyan)")
             .matcher(
-                varValue
+                string
             )
         if(m.find())
-            when (m.group(1)) {
+            return when (m.group(1)) {
                 "black" -> Color.decode("#000000")
                 "silver" -> Color.decode("#C0C0C0")
                 "gray" -> Color.decode("#808080")
@@ -60,8 +60,8 @@ abstract class DMObject {
                 "cyan" -> Color.decode("#00FFFF")
                 else -> Color.decode("#FFFFFF")
             }
-        Color(255, 255, 255)
-
+        return Color(255, 255, 255)
     }
+    abstract val dmColor: Color
 }
 

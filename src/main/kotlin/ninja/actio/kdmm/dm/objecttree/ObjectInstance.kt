@@ -1,6 +1,17 @@
 package ninja.actio.kdmm.dm.objecttree
 
+import java.awt.Color
+
 class ObjectInstance(val vars: MutableMap<String, DMVar>, val parent: ObjectTreeItem): DMObject() {
+
+    override val dir: Int by lazy { getVarValue("dir").toInt() }
+    override val pixelX: Int by lazy { getVarValue("pixel_x").toInt() }
+    override val pixelY: Int by lazy { getVarValue("pixel_y").toInt() }
+    override val plane: Int by lazy { getVarValue("plane").toInt() }
+    override val layer: Float by lazy { getVarValue("layer").toFloat() }
+    override val icon: String by lazy { getVarValue("icon") }
+    override val iconState: String by lazy { getVarValue("icon_state") }
+    override val dmColor: Color by lazy { getColor(getVarValue("color")) }
 
     val parentType: String
         get() = parent.path

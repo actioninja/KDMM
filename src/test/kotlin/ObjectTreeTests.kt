@@ -1,7 +1,9 @@
 import ninja.actio.kdmm.dm.objecttree.DMVar
 import ninja.actio.kdmm.dm.objecttree.InstanceFactory
 import ninja.actio.kdmm.dm.objecttree.ObjectTree
+import ninja.actio.kdmm.dm.objecttree.ObjectTreeItem
 import org.junit.jupiter.api.Test
+import java.awt.Color
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -9,7 +11,7 @@ class ObjectTreeTests {
     private var testTree = ObjectTree()
 
     @Test
-    fun `Default Types Are Set Correctly`() {
+    fun `Default types are set correctly`() {
         testTree = ObjectTree()
 
         assertNotNull(testTree.get("/datum"))
@@ -100,7 +102,7 @@ class ObjectTreeTests {
     }
 
     @Test
-    fun `getOrCreate Recurses Properly`() {
+    fun `getOrCreate recurses properly`() {
         testTree = ObjectTree()
         val testObject = testTree.getOrCreate("/obj/test/test2/test3/test4")
 
@@ -130,5 +132,42 @@ class ObjectTreeTests {
         assertEquals("test1", instance3.getVarValue("test1"))
         assertEquals("OVERRIDDEN", instance3.getVarValue("test2"))
         assertEquals("test3", instance3.getVarValue("test3"))
+    }
+
+    @Test
+    fun `Color decodes properly`() {
+        var testObject = ObjectTreeItem("/test")
+        testObject.setVar("color", "#DFDFDF")
+        assertEquals(Color.decode("#DFDFDF"), testObject.dmColor)
+        testObject = ObjectTreeItem("/test")
+        testObject.setVar("color", "rgb (80, 90, 100)")
+        assertEquals(Color(80, 90, 100), testObject.dmColor)
+        val namedColorList = mapOf(
+            "black" to Color.decode("#000000"),
+            "silver" to Color.decode("#C0C0C0"),
+            "gray" to Color.decode("#808080"),
+            "grey" to Color.decode("#808080"),
+            "white" to Color.decode("#FFFFFF"),
+            "maroon" to Color.decode("#800000"),
+            "red" to Color.decode("#FF0000"),
+            "purple" to Color.decode("#800080"),
+            "fuchsia" to Color.decode("#FF00FF"),
+            "magenta" to Color.decode("#FF00FF"),
+            "green" to Color.decode("#00C000"),
+            "lime" to Color.decode("#00FF00"),
+            "olive" to Color.decode("#808000"),
+            "gold" to Color.decode("#808000"),
+            "yellow" to Color.decode("#FFFF00"),
+            "navy" to Color.decode("#000080"),
+            "blue" to Color.decode("#0000FF"),
+            "teal" to Color.decode("#008080"),
+            "aqua" to Color.decode("#00FFFF"),
+            "cyan" to Color.decode("#00FFFF")
+        )
+        for ((colorName, color) in namedColorList) {
+            testObject = ObjectTreeItem("/test")
+            testObject.setVar("color", colorName)
+            assertEquals(color, testObject.dmColor)
+        }
     }
 }
