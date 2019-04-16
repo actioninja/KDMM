@@ -5,13 +5,13 @@ import java.util.regex.Pattern
 object InstanceFactory {
     fun deriveFrom(obj: DMObject, diffVars: Map<String, DMVar> = mapOf()): ObjectInstance {
         return if(obj is ObjectInstance) {
-            val newInstance = ObjectInstance(obj.vars, obj.parent)
+            val newInstance = ObjectInstance(obj.parent, obj.vars)
             newInstance.vars.putAll(diffVars)
             obj.parent.addInstance(newInstance)
             newInstance
         } else {
             val castParent = obj as ObjectTreeItem
-            val newInstance = ObjectInstance(castParent.vars, castParent)
+            val newInstance = ObjectInstance(castParent)
             castParent.addInstance(newInstance)
             newInstance
         }
@@ -34,6 +34,6 @@ object InstanceFactory {
         }
 
         System.out.println("Bad string passed to instance parser")
-        return ObjectInstance(mutableMapOf(), ObjectTreeItem("")) //If you reach here, bad news
+        return ObjectInstance(ObjectTreeItem(""), mutableMapOf()) //If you reach here, bad news
     }
 }

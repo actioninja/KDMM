@@ -174,7 +174,7 @@ class ObjectTreeTests {
         val ogInstance = testTree.getOrCreate("/obj/test")
 
         val newInstance = InstanceFactory.parseStringToInstace(testTree, "/obj/test")
-        assertEquals(newInstance.toStringDM(), ogInstance.toStringDM())
+        assertEquals(ogInstance.toStringDM(), newInstance.toStringDM())
     }
 
     @Test
@@ -188,11 +188,9 @@ class ObjectTreeTests {
             testTree,
             "/obj/test{test2 = \"OVERRIDDEN\"; test3 = \"test3\"}"
         )
-        /*
         assertEquals("test1", parsedInstance.getVarValue("test1"))
         assertEquals("OVERRIDDEN", parsedInstance.getVarValue("test2"))
         assertEquals("test3", parsedInstance.getVarValue("test3"))
-        */
     }
 
     @Test
@@ -200,6 +198,6 @@ class ObjectTreeTests {
         testTree = ObjectTree()
         val badInstance = InstanceFactory.parseStringToInstace(testTree, "aaaaaa/{{")
 
-        assertEquals(ObjectInstance(mutableMapOf(), ObjectTreeItem("")), badInstance)
+        assertEquals(ObjectInstance(ObjectTreeItem(""), mutableMapOf()), badInstance)
     }
 }

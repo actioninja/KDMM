@@ -2,7 +2,10 @@ package ninja.actio.kdmm.dm.objecttree
 
 import java.awt.Color
 
-class ObjectInstance(val vars: MutableMap<String, DMVar>, val parent: ObjectTreeItem): DMObject() {
+class ObjectInstance(
+    val parent: ObjectTreeItem,
+    val vars: MutableMap<String, DMVar> = mutableMapOf()
+): DMObject() {
 
     override val dir: Int by lazy { getVarValue("dir").toInt() }
     override val pixelX: Int by lazy { getVarValue("pixel_x").toInt() }
@@ -24,24 +27,29 @@ class ObjectInstance(val vars: MutableMap<String, DMVar>, val parent: ObjectTree
 
     override fun toStringDM(tgm: Boolean): String {
         val out = StringBuilder(parentType)
-        out.append('{')
-        if(tgm) out.append("\n\t")
-        var isFirst = true
-        for((key, value) in vars) {
-            if(isFirst)
-                isFirst = false
-            else
-                out.append(";")
-                if(tgm)
+        if(vars.isNotEmpty()) {
+            out.append('{')
+            if (tgm) out.append("\n\t")
+            var isFirst = true
+            for ((key, value) in vars) {
+                if (isFirst)
+                    isFirst = false
+                else
+                    out.append(";")
+                if (tgm)
                     out.append("\n\t")
                 else
                     out.append(" ")
-            out.append(key)
-            out.append(" = ")
-            out.append(value.value)
+                out.append(key)
+                out.append(" = ")
+                when (value.type) {
+                    DMVarType.STRING -> out.append("\"${value.value}\"")
+                    DMVarType.BOOLEAN, DMVarType.NUMBER -> out.append(value.value)
+                }
+            }
+            if (tgm) out.append("\n\t")
+            out.append('}')
         }
-        if(tgm) out.append("\n\t")
-        out.append('}')
         return out.toString()
     }
 
