@@ -12,6 +12,7 @@ object InstanceFactory {
         } else {
             val castParent = obj as ObjectTreeItem
             val newInstance = ObjectInstance(castParent)
+            newInstance.vars.putAll(diffVars)
             castParent.addInstance(newInstance)
             newInstance
         }
@@ -27,7 +28,14 @@ object InstanceFactory {
             val varMatcher =
                 Pattern.compile("([\\w]+) ?= ?((?:\"(?:\\\\\"|[^\"])*\"|[^;])*)(?:$|;)").matcher(m.group(2))
             while(varMatcher.find()) {
-                vars[varMatcher.group(1)] = DMVar(varMatcher.group(2))
+                var value = varMatcher.group(2)
+                val type = if(value.startsWith('"') and value.endsWith('"')) {
+                    value = value.removeSurrounding("\"", "\"")
+                    DMVarType.STRING
+                } else {
+                    DMVarType.NUMBER
+                }
+                vars[varMatcher.group(1)] = DMVar(value, type)
             }
             val parent = tree.get(m.group(1))
             return deriveFrom(parent, vars)
