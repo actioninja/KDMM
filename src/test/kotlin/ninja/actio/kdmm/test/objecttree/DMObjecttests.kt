@@ -4,6 +4,7 @@ import ninja.actio.kdmm.dm.objecttree.*
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class DMObjecttests {
     var testTree = ObjectTree()
@@ -99,5 +100,18 @@ class DMObjecttests {
         val badInstance = InstanceFactory.parseStringToInstace(testTree, "aaaaaa/{{")
 
         assertEquals(ObjectInstance(ObjectTreeItem(""), mutableMapOf()), badInstance)
+    }
+
+    @Test
+    fun `getVar uses parents properly`() {
+        val parent = ObjectTreeItem("/datum")
+        val child = ObjectTreeItem("/datum/test", parent)
+
+        parent.setVar("test1", "test1")
+        child.setVar("test2", "test2")
+
+        assertEquals("test1", parent.getVarValue("test1"))
+        assertEquals("test1", child.getVarValue("test1"))
+        assertEquals("test2", child.getVarValue("test2"))
     }
 }
