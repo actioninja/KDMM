@@ -3,6 +3,7 @@ import org.junit.jupiter.api.Test
 import java.awt.Color
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ObjectTreeTests {
     private var testTree = ObjectTree()
@@ -166,6 +167,19 @@ class ObjectTreeTests {
             testObject.setVar("color", colorName)
             assertEquals(color, testObject.dmColor)
         }
+    }
+
+    @Test
+    fun `ObjectInstance equals works properly`() {
+        val notObjectInstance = ObjectTreeItem("/obj/test", testTree.get("/obj"))
+        val objectInstance = notObjectInstance.instances[0]
+        val objectInstanceCopy = notObjectInstance.instances[0]
+        val differentObjectInstance = ObjectInstance(testTree.get("/obj"), mutableMapOf())
+
+        assert(objectInstance == objectInstance)
+        assert(objectInstance == objectInstanceCopy)
+        assert(!objectInstance.equals(notObjectInstance))
+        assert(!objectInstance.equals(differentObjectInstance))
     }
 
     @Test
