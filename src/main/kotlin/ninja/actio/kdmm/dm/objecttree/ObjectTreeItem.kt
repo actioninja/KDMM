@@ -20,7 +20,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
 
     init {
         path = path.trim()
-        setVar("type", "path")
+        setVar("type", path)
         if(parent != null) {
             parent.subtypes.add(this)
             setVar("parentType", parent.path)
