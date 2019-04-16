@@ -123,5 +123,6 @@ class DMObjecttests {
         assert(parent.isType("/datum"))
         assert(child.isType("/datum/test"))
         assert(child.isType("/datum"))
+        assert(!child.isType("/notdatum"))
     }
 }
