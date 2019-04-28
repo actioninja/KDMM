@@ -1,0 +1,7 @@
+non comment text //comment text
+
+//also a comment
+
+/* block comment */
+
+test /* block comment */

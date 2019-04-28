@@ -6,3 +6,19 @@ import java.io.InputStream
 fun getFileInternal(path: String): InputStream {
     return KDMM::class.java.classLoader.getResourceAsStream(path)
 }
+
+fun stripComments(string: String): String {
+    val singleLineStripper = Regex("//.+")
+    val blockStripper = Regex("/\\*(\\*(?!/)|[^*])*\\*/")
+    val lineStripped = singleLineStripper.replace(string, "")
+    val blockStripped = blockStripper.replace(lineStripped, "")
+    return blockStripped.trimEnd()
+}
+
+fun cleanPath(string: String): String {
+    var working = string
+    if(!working.startsWith('/'))
+        working = "/$working"
+    working = working.removeSuffix("/")
+    return working
+}
