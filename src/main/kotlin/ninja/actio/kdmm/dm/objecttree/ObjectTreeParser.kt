@@ -6,9 +6,12 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.nio.file.Path
 
-class ObjectTreeParser(val objectTree: ObjectTree = ObjectTree()) {
+class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
+    init {
+
+    }
+
     companion object {
         //Taken from FastDMM
         private val QUOTES_PATTERN = Regex("^\"(.*)\"$")
@@ -17,17 +20,19 @@ class ObjectTreeParser(val objectTree: ObjectTree = ObjectTree()) {
         private val MACRO_PATTERN = Regex("(?<![\\d\\w\"])\\w+(?![\\d\\w\"])")
     }
 
-    private var isCommenting = false
-    private var isMultilineString = false
-    private var multilineStringDepth = 0
-    private var parenthesisDepth = 0
-    private var stringDepth = 0
-    private var stringExpDepth = 0
 
     private val macros = mutableMapOf<String, String>()
 
+    var parseRootDir = ""
+
     fun parseDME(file: File) {
         subParse(getFileInternal("stddef.dm"))
+        parseRootDir = file.path
+        parseFile(file)
+    }
+
+    fun parseFile(path: String) {
+        subParse(File(path).inputStream())
     }
 
     fun parseFile(file: File) {
@@ -35,12 +40,31 @@ class ObjectTreeParser(val objectTree: ObjectTree = ObjectTree()) {
     }
 
     fun parse(stream: InputStream) {
+        var parenthesisDepth = 0
+        var stringDepth = 0
+        var stringExpDepth = 0
+
+        val includesFound = mutableListOf<String>()
+
         val lines = cleanAndListize(stream)
+
+        for (line in lines) {
+            //Preprocess, look for #define, #inclue, etc.
+            if (line.trim().startsWith('#')) {
+                if (line.startsWith())
+            }
+
+        }
+
+        for (found in includesFound) {
+            parseFile("")
+        }
     }
 
     fun subParse(stream: InputStream) {
         val parser = ObjectTreeParser(objectTree)
         parser.macros.putAll(macros)
+        parser.parseRootDir = parseRootDir
         parser.parse(stream)
     }
 
@@ -57,10 +81,10 @@ class ObjectTreeParser(val objectTree: ObjectTree = ObjectTree()) {
             line = stripComments(line)
             line = line.replace('\t', ' ')
             line = line.replace("    ", " ")
-            if(line.isNotBlank()) {
-                if(line.endsWith('\\')) {
+            if (line.isNotBlank()) {
+                if (line.endsWith('\\')) {
                     line = line.removeSuffix("\\")
-                    if(firstMultiline) {
+                    if (firstMultiline) {
                         firstMultiline = false
                     } else {
                         line = line.trimStart()
@@ -68,7 +92,7 @@ class ObjectTreeParser(val objectTree: ObjectTree = ObjectTree()) {
                     runOn.append(line)
 
                 } else {
-                    if(!firstMultiline)
+                    if (!firstMultiline)
                         line = line.trimStart()
                     runOn.append(line)
                     line = runOn.toString()
