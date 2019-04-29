@@ -1,0 +1,5 @@
+#define FILE_DIR .
+
+//Ahhh test comment
+
+#include "code/test.dm"
