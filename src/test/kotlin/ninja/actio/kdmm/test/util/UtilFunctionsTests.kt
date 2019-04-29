@@ -7,9 +7,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
 
-class Utilfunctions {
+class UtilFunctionsTests {
     val classLoader = javaClass.classLoader
-    val commentStream = classLoader.getResourceAsStream("commentstrippertest.txt")
+    val commentStream = classLoader.getResourceAsStream("comment_stripper_test.txt")
     val expectedStrippedResult = listOf(
         "non comment text",
         "test"

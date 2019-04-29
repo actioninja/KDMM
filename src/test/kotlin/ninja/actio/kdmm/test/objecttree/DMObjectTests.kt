@@ -6,7 +6,7 @@ import java.awt.Color
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class DMObjecttests {
+class DMObjectTests {
     var testTree = ObjectTree()
 
     @Test
