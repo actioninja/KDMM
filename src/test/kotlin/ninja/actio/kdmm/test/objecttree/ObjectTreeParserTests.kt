@@ -6,11 +6,12 @@ import kotlin.test.assertEquals
 
 class ObjectTreeParserTests {
 
-    val classLoader = javaClass.classLoader
-    val toBeCleanedStream = classLoader.getResourceAsStream("clean_and_listize_test.txt")
-    val genericParser = ObjectTreeParser()
+    private val classLoader = javaClass.classLoader
+    private val toBeCleanedStream = classLoader.getResourceAsStream("clean_and_listize_test.txt")
+    private val toBeCleanedSpacesStream = classLoader.getResourceAsStream("clean_and_listize_test_spaces.txt")
+    private val genericParser = ObjectTreeParser()
 
-    val expectedCleanedAndListized = listOf(
+    private val expectedCleanedAndListized = listOf(
         "/obj/effect/abstract/ripple",
         " name = \"hyperspace ripple\"",
         " desc = \"Something is coming through hyperspace, you can see the visual disturbances. It's probably best not to be on top of these when whatever is tunneling comes through.\"",
@@ -33,5 +34,7 @@ class ObjectTreeParserTests {
     fun `Clean and Listize Test`() {
         val cleaned = genericParser.cleanAndListize(toBeCleanedStream)
         assertEquals(expectedCleanedAndListized, cleaned)
+        val cleanedSpaces = genericParser.cleanAndListize(toBeCleanedSpacesStream)
+        assertEquals(expectedCleanedAndListized, cleanedSpaces)
     }
 }

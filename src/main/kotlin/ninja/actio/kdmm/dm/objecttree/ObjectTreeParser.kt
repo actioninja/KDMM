@@ -56,6 +56,7 @@ class ObjectTreeParser(val objectTree: ObjectTree = ObjectTree()) {
             line = it
             line = stripComments(line)
             line = line.replace('\t', ' ')
+            line = line.replace("    ", " ")
             if(line.isNotBlank()) {
                 if(line.endsWith('\\')) {
                     line = line.removeSuffix("\\")
