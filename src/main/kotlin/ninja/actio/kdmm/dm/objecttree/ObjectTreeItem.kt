@@ -46,7 +46,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
     }
 
     fun setVar(key: String, value: Number) {
-        if(!vars.containsKey(key)) {
+        if (!vars.containsKey(key)) {
             vars[key] = DMVar(value.toString(), DMVarType.NUMBER)
         } else {
             vars[key]!!.value = value.toString()

@@ -4,7 +4,6 @@ import ninja.actio.kdmm.dm.objecttree.*
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class DMObjectTests {
     var testTree = ObjectTree()

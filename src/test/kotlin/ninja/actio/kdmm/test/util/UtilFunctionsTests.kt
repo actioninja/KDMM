@@ -22,7 +22,7 @@ class UtilFunctionsTests {
         var line = ""
         br.forEachLine {
             line = stripComments(it)
-            if(line.isNotBlank()) {
+            if (line.isNotBlank()) {
                 list.add(line)
             }
         }

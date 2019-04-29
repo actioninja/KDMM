@@ -1,8 +1,7 @@
 package ninja.actio.kdmm.test.objecttree
 
-import ninja.actio.kdmm.dm.objecttree.*
+import ninja.actio.kdmm.dm.objecttree.ObjectTree
 import org.junit.jupiter.api.Test
-import java.awt.Color
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

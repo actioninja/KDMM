@@ -51,7 +51,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         for (line in lines) {
             //Preprocess, look for #define, #inclue, etc.
             if (line.trim().startsWith('#')) {
-                if (line.startsWith())
             }
 
         }

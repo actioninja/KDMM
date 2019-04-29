@@ -17,7 +17,7 @@ fun stripComments(string: String): String {
 
 fun cleanPath(string: String): String {
     var working = string
-    if(!working.startsWith('/'))
+    if (!working.startsWith('/'))
         working = "/$working"
     working = working.removeSuffix("/")
     return working
