@@ -1,7 +1,10 @@
 package ninja.actio.kdmm.dm
 
 import ninja.actio.kdmm.KDMM
+import java.io.File
 import java.io.InputStream
+
+val SYSTEM_SEPARATOR = File.separatorChar
 
 fun getFileInternal(path: String): InputStream {
     return KDMM::class.java.classLoader.getResourceAsStream(path)

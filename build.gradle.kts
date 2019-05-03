@@ -43,6 +43,7 @@ tasks.jacocoTestReport {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.uchuhimo", "kotlinx-bimap", "1.2")
+    implementation("io.github.microutils", "kotlin-logging", "1.6.24")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.2.70")
