@@ -19,7 +19,7 @@ class UtilFunctionsTests {
     fun `Comment stripper test`() {
         val br = BufferedReader(InputStreamReader(commentStream))
         val list = mutableListOf<String>()
-        var line = ""
+        lateinit var line: String
         br.forEachLine {
             line = stripComments(it)
             if (line.isNotBlank()) {
