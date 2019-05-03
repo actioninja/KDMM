@@ -59,7 +59,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
         val pathTree = mutableListOf<String>()
 
-        var skipProcs = false
         for (l in lines) {
             var line = l
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
