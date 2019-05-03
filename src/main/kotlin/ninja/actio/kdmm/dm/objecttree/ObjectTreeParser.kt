@@ -2,12 +2,14 @@ package ninja.actio.kdmm.dm.objecttree
 
 import mu.KotlinLogging
 import ninja.actio.kdmm.dm.SYSTEM_SEPARATOR
+import ninja.actio.kdmm.dm.cleanPath
 import ninja.actio.kdmm.dm.getFileInternal
 import ninja.actio.kdmm.dm.stripComments
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.util.regex.Pattern
 
 private val logger = KotlinLogging.logger {}
 
@@ -49,14 +51,17 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     fun parse(stream: InputStream) {
         val lines = cleanAndListize(stream)
         //precount defines for progress bars and the like
-        for(line in lines) {
-            if(line.trim().startsWith("#include")) {
+        for (line in lines) {
+            if (line.trim().startsWith("#include")) {
                 totalIncludes++
             }
         }
 
+        val pathTree = mutableListOf<String>()
+
         var skipProcs = false
-        for (line in lines) {
+        for (l in lines) {
+            var line = l
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
             logger.debug { "Starting preprocessing..." }
             //Preprocesser commands, look for #define, #inclue, etc.
@@ -72,9 +77,9 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     }
                     logger.debug { "Including: \"$include\"" }
                     val realPath = "$prefix$include"
-                    if(realPath.endsWith(".dm") or realPath.endsWith(".dme")) {
+                    if (realPath.endsWith(".dm") or realPath.endsWith(".dme")) {
                         val includeFile = File("$parseRootDir$SYSTEM_SEPARATOR$realPath")
-                        if(!includeFile.exists()) {
+                        if (!includeFile.exists()) {
                             logger.error { "Just tried to include a nonexistant file: ${includeFile.path}" }
                             continue
                         }
@@ -95,19 +100,19 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 }
                 if (line.startsWith("#define")) {
                     var result = defineRegex.find(line)
-                    if(result != null) {
-                        macros[result.groupValues[0]] = result.groupValues[1].replace("$", "\\$")
+                    if (result != null) {
+                        macros[result.groupValues[0]] = macroSubstititue(result.groupValues[1].replace("$", "\\$"))
                     } else {
                         result = defineWithParametersRegex.find(line)
-                        if(result != null) {
+                        if (result != null) {
                             //TODO: make this less unsafe for parameterized defines
                             val key = result.groupValues[0]
                             val parametersList = result.groupValues[1].split(',')
                             var content = result.groupValues[3]
-                            for((i, parameter) in parametersList.withIndex()) {
-                               content = content.replace(parameter.trim(), "{{{$i}}}")
+                            for ((i, parameter) in parametersList.withIndex()) {
+                                content = content.replace(parameter.trim(), "{{{$i}}}")
                             }
-                            macros[key] = content
+                            macros[key] = macroSubstititue(content)
                         } else {
                             logger.error { "#define detected but regex couldn't parse it: $line" }
                         }
@@ -117,22 +122,60 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             }
             //indentation
             var indentLevel = 0
-            for(char in line) {
-                if(char == ' ')
+            for (char in line) {
+                if (char == ' ')
                     indentLevel++
                 else
                     break
             }
-            //Skip proc definitions because we don't care about them
-            //This won't work with some "byond syntax" but that style is absolutely garbage and I don't care enough to support it
-            if(indentLevel == 0) {
-                if(line.contains("proc/")) {
-                    skipProcs = true
-                    continue
-                } else {
-                    skipProcs = false
+
+            //substitute any macros in the current line
+            line = macroSubstititue(line)
+
+            for (i in (pathTree.size..indentLevel))
+                pathTree.add("")
+            pathTree[indentLevel] = cleanPath(line.trim())
+            if (pathTree.size > indentLevel + 1) {
+                var i = pathTree.lastIndex
+                while(i > indentLevel) {
+                    pathTree.removeAt(i)
+                    i--
                 }
-            } else if(skipProcs) continue
+            }
+            val fullPathBuilder = StringBuilder()
+            for (pathComponent in pathTree)
+                fullPathBuilder.append(pathComponent)
+            var fullPath = fullPathBuilder.toString()
+            val divided = fullPath.split('/')
+            //rebuild again but with only important shit
+            val affectedBuilder = StringBuilder()
+            for (string in divided) {
+                if (string.isEmpty()) continue
+                if ((string == "static") or (string == "global") or (string == "tmp")) continue
+                if ((string == "proc") or (string == "verb") or (string == "var")) break
+                if (string.contains('=') or string.contains('(')) break
+                affectedBuilder.append("/$string")
+            }
+            val item = objectTree.getOrCreate(affectedBuilder.toString())
+            if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
+                continue
+            fullPath = fullPath.replace("/tmp", "")
+            fullPath = fullPath.replace("/static", "")
+            fullPath = fullPath.replace("/global", "")
+            //parse out var definitions
+            if (fullPath.contains("var/")) {
+                val split = fullPath.split('=', limit = 2)
+                val varName = split[0].substring(split[0].lastIndexOf('/') + 1).trim()
+                if (split.size > 1) {
+                    if(split[1].contains('"')) {
+                        item.setVar(varName, split[1].removeSurrounding("\""))
+                    } else {
+                        item.setVar(varName, split[1], DMVarType.NUMBER)
+                    }
+                } else {
+                    item.setVar(varName)
+                }
+            }
         }
     }
 
@@ -144,13 +187,31 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         parser.parse(stream)
     }
 
+    fun macroSubstititue(inLine: String): String {
+        var line = inLine
+        for ((macro, replacement) in macros) {
+            var position = line.indexOf(macro)
+            while (position >= 0) {
+                if (line[position + macro.length] == '(') {
+
+                    val result = defineParameterResolve("", replacement)
+                    line.replace(macro, result)
+                } else {
+                    line = line.replace(macro, replacement)
+                }
+                position = line.indexOf(macro)
+            }
+        }
+        return line
+    }
+
     fun defineParameterResolve(parameters: String, content: String): String {
         var working = content
         val parameterList = parameters.split(',')
-        for((i, parameter) in parameterList.withIndex()) {
+        for ((i, parameter) in parameterList.withIndex()) {
             val regex = Regex("##{{{$i}}}")
             var pad = " "
-            if(regex.find(content) != null) {
+            if (regex.find(content) != null) {
                 pad = ""
             }
             working = working.replace("{{{$i}}}", "$pad${parameter.trim()}$pad")

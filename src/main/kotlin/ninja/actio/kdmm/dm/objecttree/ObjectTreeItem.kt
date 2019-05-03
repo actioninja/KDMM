@@ -37,9 +37,9 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
         return DMVar("null")
     }
 
-    fun setVar(key: String, value: String) {
+    fun setVar(key: String, value: String = "", type: DMVarType = DMVarType.STRING) {
         if (!vars.contains(key)) {
-            vars[key] = DMVar(value)
+            vars[key] = DMVar(value, type)
         } else {
             vars[key]!!.value = value
         }
