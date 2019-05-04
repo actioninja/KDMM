@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     application
     jacoco
-    kotlin("jvm") version "1.3.21"
+    kotlin("jvm") version "1.3.31"
     id("com.gradle.build-scan") version "2.2.1"
 }
 
@@ -44,6 +44,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.uchuhimo", "kotlinx-bimap", "1.2")
     implementation("io.github.microutils", "kotlin-logging", "1.6.24")
+    implementation("no.tornado", "tornadofx", "2.0.0-SNAPSHOT")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.2.70")
@@ -52,6 +53,7 @@ dependencies {
 
 repositories {
     mavenCentral()
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
 val compileKotlin: KotlinCompile by tasks
