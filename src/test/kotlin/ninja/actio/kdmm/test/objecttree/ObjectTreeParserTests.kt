@@ -2,6 +2,7 @@ package ninja.actio.kdmm.test.objecttree
 
 import ninja.actio.kdmm.dm.objecttree.ObjectTreeParser
 import org.junit.jupiter.api.Test
+import kotlin.math.exp
 import kotlin.test.assertEquals
 
 class ObjectTreeParserTests {
@@ -39,12 +40,23 @@ class ObjectTreeParserTests {
     }
 
     @Test
-    fun `Define Parameter Resolution`() {
+    fun `Macro Parameter Resolution`() {
         //First test
         val parameters = "test1, test2"
         val content = "({{{0}}} + asdfasdf + ##{{{1}}})"
         val expectedResult = "( test1  + asdfasdf + test2)"
-        val result = genericParser.defineParameterResolve(parameters, content)
+        val result = genericParser.macroParameterResolve(parameters, content)
         assertEquals(expectedResult, result)
+    }
+
+    @Test
+    fun `Macro Substitution`() {
+        val parserWithMacros = ObjectTreeParser()
+        parserWithMacros.addMacro("NO_PARAMETER", "(THIS IS A REPLACEMENT)")
+        parserWithMacros.addMacro("PARAMETERIZED", "(THIS IS A REPLACEMENT WITH PARAMETERS: {{{0}}}, ##{{{1}}}, {{{2}}})")
+        val preSub = "var/not_a_macro = NO_PARAMETER; var/not_a_macro_2 = PARAMETERIZED(\"param1\", \"param2\", \"param3\")"
+        val expected = "var/not_a_macro = (THIS IS A REPLACEMENT); var/not_a_macro_2 = (THIS IS A REPLACEMENT WITH PARAMETERS:  \"param1\" , \"param2\",  \"param3\" )"
+        val result = parserWithMacros.macroSubstititue(preSub)
+        assertEquals(expected, result)
     }
 }

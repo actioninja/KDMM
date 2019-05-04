@@ -9,7 +9,6 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.util.regex.Pattern
 
 private val logger = KotlinLogging.logger {}
 
@@ -186,17 +185,23 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         parser.parse(stream)
     }
 
+    //used for testing
+    fun addMacro(key: String, replacement: String) {
+        macros[key] = replacement
+    }
+
     fun macroSubstititue(inLine: String): String {
         var line = inLine
         for ((macro, replacement) in macros) {
             var position = line.indexOf(macro)
             while (position >= 0) {
-                if (line[position + macro.length] == '(') {
-
-                    val result = defineParameterResolve("", replacement)
-                    line.replace(macro, result)
+                line = if (line[position + macro.length] == '(') {
+                    val searchPattern = Regex("($macro\\((.+)\\))")
+                    val searchResult = searchPattern.find(line)
+                    val result = macroParameterResolve(searchResult!!.groupValues[2], replacement) //Why 2? I'm not sure, java regex was acting weird
+                    line.replace(searchResult.groupValues[0], result)
                 } else {
-                    line = line.replace(macro, replacement)
+                    line.replace(macro, replacement)
                 }
                 position = line.indexOf(macro)
             }
@@ -206,7 +211,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
     //TODO
     //There is without a doubt a much, much better way to do this, but we tech debt now bois
-    fun defineParameterResolve(parameters: String, content: String): String {
+    fun macroParameterResolve(parameters: String, content: String): String {
         var working = content
         val parameterList = parameters.split(',')
         for ((i, parameter) in parameterList.withIndex()) {
