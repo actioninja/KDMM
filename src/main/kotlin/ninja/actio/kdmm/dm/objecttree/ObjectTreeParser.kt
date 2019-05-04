@@ -204,16 +204,20 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         return line
     }
 
+    //TODO
+    //There is without a doubt a much, much better way to do this, but we tech debt now bois
     fun defineParameterResolve(parameters: String, content: String): String {
         var working = content
         val parameterList = parameters.split(',')
         for ((i, parameter) in parameterList.withIndex()) {
-            val regex = Regex("##{{{$i}}}")
-            var pad = " "
+            val regex = Regex("##\\{\\{\\{$i\\}\\}\\}")
+            var target = "{{{$i}}}"
+            var replacement = " ${parameter.trim()} "
             if (regex.find(content) != null) {
-                pad = ""
+                target = "##$target"
+                replacement = replacement.trim()
             }
-            working = working.replace("{{{$i}}}", "$pad${parameter.trim()}$pad")
+            working = working.replace(target, replacement)
         }
         return working
     }

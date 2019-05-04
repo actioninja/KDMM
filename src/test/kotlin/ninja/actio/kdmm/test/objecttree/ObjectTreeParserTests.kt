@@ -37,4 +37,14 @@ class ObjectTreeParserTests {
         val cleanedSpaces = genericParser.cleanAndListize(toBeCleanedSpacesStream)
         assertEquals(expectedCleanedAndListized, cleanedSpaces)
     }
+
+    @Test
+    fun `Define Parameter Resolution`() {
+        //First test
+        val parameters = "test1, test2"
+        val content = "({{{0}}} + asdfasdf + ##{{{1}}})"
+        val expectedResult = "( test1  + asdfasdf + test2)"
+        val result = genericParser.defineParameterResolve(parameters, content)
+        assertEquals(expectedResult, result)
+    }
 }
