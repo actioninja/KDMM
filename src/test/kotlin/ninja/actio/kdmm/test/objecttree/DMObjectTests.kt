@@ -4,6 +4,7 @@ import ninja.actio.kdmm.dm.objecttree.*
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class DMObjectTests {
     var testTree = ObjectTree()
@@ -70,7 +71,7 @@ class DMObjectTests {
     }
 
     @Test
-    fun `setVar and getVar full execution`() {
+    fun `setVar and getVar full branch`() {
         val test1 = ObjectTreeItem("/datum")
         val test2 = ObjectTreeItem("/datum/test", test1)
 
@@ -142,5 +143,19 @@ class DMObjectTests {
         assert(child.isType("/datum/test"))
         assert(child.isType("/datum"))
         assert(!child.isType("/notdatum"))
+    }
+
+    @Test
+    fun `ObjectInstance equals full branch`() {
+        testTree = ObjectTree()
+        val baseItem = ObjectTreeItem("obj/test")
+        val baseInstance = ObjectInstance(baseItem)
+        val identicalButSeperateInstance = ObjectInstance(baseItem)
+        val modified = ObjectInstance(baseItem, mutableMapOf("testvar" to DMVar("test")))
+
+        assertFalse(baseInstance.equals(baseItem))
+        assert(baseInstance.equals(baseInstance))
+        assert(baseInstance.equals(identicalButSeperateInstance))
+        assertFalse(baseInstance.equals(modified))
     }
 }
