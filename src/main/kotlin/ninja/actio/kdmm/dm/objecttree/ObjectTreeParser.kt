@@ -34,7 +34,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     fun parseDME(file: File) {
         logger.debug { "Parsing DME: $file" }
         subParse(getFileInternal("stddef.dm"))
-        parseRootDir = file.path
+        parseRootDir = file.parent
 
         parseFile(file)
     }
@@ -61,7 +61,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         for (l in lines) {
             var line = l
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
-            logger.debug { "Starting preprocessing..." }
             //Preprocesser commands, look for #define, #inclue, etc.
             if (line.trim().startsWith('#')) {
                 logger.debug { "Found preprocessor command: $line" }
