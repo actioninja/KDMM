@@ -206,7 +206,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     ) //Why 2? I'm not sure, java regex was acting weird
                     line = line.replace(searchResult.groupValues[0], result)
                 } else {
-                    line.replace(macro, replacement)
+                    line = line.replace(macro, replacement)
                 }
                 position = line.indexOf(macro)
             }
