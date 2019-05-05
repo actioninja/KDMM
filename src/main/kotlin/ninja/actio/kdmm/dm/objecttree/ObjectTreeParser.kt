@@ -131,48 +131,61 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             //substitute any macros in the current line
             line = macroSubstititue(line)
 
-            for (i in (pathTree.size..indentLevel))
-                pathTree.add("")
-            pathTree[indentLevel] = cleanPath(line.trim())
-            if (pathTree.size > indentLevel + 1) {
-                var i = pathTree.lastIndex
-                while (i > indentLevel) {
-                    pathTree.removeAt(i)
-                    i--
-                }
-            }
-            val fullPathBuilder = StringBuilder()
-            for (pathComponent in pathTree)
-                fullPathBuilder.append(pathComponent)
-            var fullPath = fullPathBuilder.toString()
-            val divided = fullPath.split('/')
-            //rebuild again but with only important shit
-            val affectedBuilder = StringBuilder()
-            for (string in divided) {
-                if (string.isEmpty()) continue
-                if ((string == "static") or (string == "global") or (string == "tmp")) continue
-                if ((string == "proc") or (string == "verb") or (string == "var")) break
-                if (string.contains('=') or string.contains('(')) break
-                affectedBuilder.append("/$string")
-            }
-            val item = objectTree.getOrCreate(affectedBuilder.toString())
-            if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
-                continue
-            fullPath = fullPath.replace("/tmp", "")
-            fullPath = fullPath.replace("/static", "")
-            fullPath = fullPath.replace("/global", "")
-            //parse out var definitions
-            if (fullPath.contains("var/")) {
-                val split = fullPath.split('=', limit = 2)
-                val varName = split[0].substring(split[0].lastIndexOf('/') + 1).trim()
-                if (split.size > 1) {
-                    if (split[1].contains('"')) {
-                        item.setVar(varName, split[1].removeSurrounding("\""))
-                    } else {
-                        item.setVar(varName, split[1], DMVarType.NUMBER)
+            //split along semicolons
+            val splitSemi = line.split(';')
+            for(part in splitSemi) {
+                for (i in (pathTree.size..indentLevel))
+                    pathTree.add("")
+                pathTree[indentLevel] = cleanPath(line.trim())
+                if (pathTree.size > indentLevel + 1) {
+                    var i = pathTree.lastIndex
+                    while (i > indentLevel) {
+                        pathTree.removeAt(i)
+                        i--
                     }
-                } else {
-                    item.setVar(varName)
+                }
+                val fullPathBuilder = StringBuilder()
+                for (pathComponent in pathTree)
+                    fullPathBuilder.append(pathComponent)
+                var fullPath = fullPathBuilder.toString()
+                val divided = fullPath.split('/')
+                //rebuild again but with only important shit
+                val affectedBuilder = StringBuilder()
+                for (string in divided) {
+                    if (string.isEmpty()) continue
+                    if ((string == "static") or (string == "global") or (string == "tmp")) continue
+                    if ((string == "proc") or (string == "verb") or (string == "var")) break
+                    if (string.contains('=') or string.contains('(')) break
+                    affectedBuilder.append("/$string")
+                }
+                val item = objectTree.getOrCreate(affectedBuilder.toString())
+                if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
+                    continue
+                fullPath = fullPath.replace("/tmp", "")
+                fullPath = fullPath.replace("/static", "")
+                fullPath = fullPath.replace("/global", "")
+                //parse out var definitions
+                if (fullPath.contains("var/")) {
+                    val removedVar = fullPath.substring(fullPath.lastIndexOf('/') + 1).trim()
+                    val splitResult = mutableListOf<String>()
+                    val splitComma = removedVar.split(',')
+                    for (commaPart in splitComma) {
+                        val splitSemi = commaPart.split(';')
+                        splitResult.addAll(splitSemi)
+                    }
+                    for (resultPart in splitResult) {
+                        val split = resultPart.split('=', limit = 2)
+                        val varName = split[0].trim()
+                        if (split.size > 1) {
+                            if (split[1].contains('"')) {
+                                item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
+                            } else {
+                                item.setVar(varName, split[1].trim(), DMVarType.NUMBER)
+                            }
+                        } else {
+                            item.setVar(varName)
+                        }
+                    }
                 }
             }
         }
