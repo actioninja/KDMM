@@ -14,6 +14,10 @@ class ObjectTree {
     var iconSize = 32
 
     init {
+        //global
+        val global = ObjectTreeItem("")
+        addItem(global)
+
         //default datums
 
         val datum = ObjectTreeItem("/datum")
@@ -127,6 +131,43 @@ class ObjectTree {
 
     fun addItem(item: ObjectTreeItem) {
         items[item.path] = item
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if(other !is ObjectTree)
+            return false
+        if(other === this)
+            return true
+        if(toString() == other.toString())
+            return true
+        return false
+    }
+
+    override fun toString(): String {
+        val builder = StringBuilder()
+        //filter out stuff that's the same every time because it's not useful to print it every time
+        val filteredMap = mutableMapOf<String, ObjectTreeItem>()
+        filteredMap.putAll(items)
+        filteredMap.remove("/datum")
+        filteredMap.remove("/atom")
+        filteredMap.remove("/atom/movable")
+        filteredMap.remove("/area")
+        filteredMap.remove("/turf")
+        filteredMap.remove("/obj")
+        filteredMap.remove("/mob")
+        filteredMap.remove("/world")
+        val sorted = filteredMap.toSortedMap()
+        builder.append("Object Tree:{\n")
+        for ((path, obj) in sorted) {
+            builder.append("    $path {\n")
+            val sortedVars = obj.vars.toSortedMap()
+            for((key, dmvar) in sortedVars) {
+                builder.append("        $key = ${dmvar.value},\n")
+            }
+            builder.append("    }\n")
+        }
+        builder.append("\n}")
+        return builder.toString()
     }
 
     fun dumpTree(stream: PrintStream) {
