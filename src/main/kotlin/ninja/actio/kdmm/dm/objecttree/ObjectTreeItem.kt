@@ -74,7 +74,6 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
             return
         instances.add(instance)
         instances.sortBy { it.toStringDM() }
-        //TODO: listeners
     }
 
     fun removeInstance(instance: ObjectInstance) {
@@ -82,7 +81,6 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
         if (index == -1)
             return
         instances.remove(instance)
-        //TODO: listeners
     }
 
     val parentlessName: String
@@ -94,8 +92,5 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
     override fun toStringDM(tgm: Boolean): String {
         return path
     }
-
-    //TODO: listeners
-
 }
 
