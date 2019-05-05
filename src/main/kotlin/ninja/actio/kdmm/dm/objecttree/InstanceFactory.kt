@@ -1,6 +1,9 @@
 package ninja.actio.kdmm.dm.objecttree
 
+import mu.KotlinLogging
 import java.util.regex.Pattern
+
+private val logger = KotlinLogging.logger {}
 
 object InstanceFactory {
     fun deriveFrom(obj: DMObject, diffVars: Map<String, DMVar> = mapOf()): ObjectInstance {
@@ -41,7 +44,7 @@ object InstanceFactory {
             return deriveFrom(parent, vars)
         }
 
-        System.out.println("Bad string passed to instance parser")
+        logger.error { "Bad string passed to instance parser: $string" }
         return ObjectInstance(ObjectTreeItem(""), mutableMapOf()) //If you reach here, bad news
     }
 }
