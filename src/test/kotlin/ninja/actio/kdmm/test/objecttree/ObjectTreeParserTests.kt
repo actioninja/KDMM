@@ -194,6 +194,7 @@ class ObjectTreeParserTests {
         assertEquals(expectedstddefTree, stddefParser.objectTree)
     }
 
+    //Minimal environment is basically just a "things are in fact parsing without runtiming test"
     @Test
     fun `Parser Minimal Test`() {
         val minimalTestParser = ObjectTreeParser()
@@ -205,5 +206,26 @@ class ObjectTreeParserTests {
         testItem.setVar("test_text", "blah")
         minimalTestParser.parseDME(File(minimalDME.path))
         assertEquals(expectedObjectTree, minimalTestParser.objectTree)
+    }
+
+    //Basic environment is "this has more complicated of things to parse, but still isn't a full environment"
+    //It uses some more complicated cases from tgcode to see if the parser handles them correctly
+    @Test
+    fun `Parser Basic Test`() {
+        val basicTestParser = ObjectTreeParser()
+        val basicDME = classLoader.getResource("environments/basic/basic.dme")
+        initializeExpectedStddefs()
+        val expectedObjectTree = expectedstddefTree
+        val testItem = expectedObjectTree.getOrCreate("/obj/test")
+        testItem.setVar("test_var", 10)
+        testItem.setVar("test_text", "blah")
+        basicTestParser.parseDME(File(basicDME.path))
+    }
+
+    //Live TG is what it sounds like, it's a live version of a tgcode repo. Since it's too large to easily know what the
+    //result should be, this is a pure unit test
+    @Test
+    fun `Parser TG Live Test`() {
+
     }
 }
