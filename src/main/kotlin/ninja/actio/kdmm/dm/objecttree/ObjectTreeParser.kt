@@ -115,6 +115,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             logger.error { "#define detected but regex couldn't parse it: $line" }
                         }
                     }
+                    continue
                 }
                 //TODO: ifs and other conditionals
             }
@@ -135,7 +136,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             pathTree[indentLevel] = cleanPath(line.trim())
             if (pathTree.size > indentLevel + 1) {
                 var i = pathTree.lastIndex
-                while(i > indentLevel) {
+                while (i > indentLevel) {
                     pathTree.removeAt(i)
                     i--
                 }
@@ -165,7 +166,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 val split = fullPath.split('=', limit = 2)
                 val varName = split[0].substring(split[0].lastIndexOf('/') + 1).trim()
                 if (split.size > 1) {
-                    if(split[1].contains('"')) {
+                    if (split[1].contains('"')) {
                         item.setVar(varName, split[1].removeSurrounding("\""))
                     } else {
                         item.setVar(varName, split[1], DMVarType.NUMBER)
@@ -195,11 +196,15 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         for ((macro, replacement) in macros) {
             var position = line.indexOf(macro)
             while (position >= 0) {
-                line = if (line[position + macro.length] == '(') {
+                val possibleLoc = position + macro.length
+                if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
                     val searchPattern = Regex("($macro\\((.+)\\))")
                     val searchResult = searchPattern.find(line)
-                    val result = macroParameterResolve(searchResult!!.groupValues[2], replacement) //Why 2? I'm not sure, java regex was acting weird
-                    line.replace(searchResult.groupValues[0], result)
+                    val result = macroParameterResolve(
+                        searchResult!!.groupValues[2],
+                        replacement
+                    ) //Why 2? I'm not sure, java regex was acting weird
+                    line = line.replace(searchResult.groupValues[0], result)
                 } else {
                     line.replace(macro, replacement)
                 }

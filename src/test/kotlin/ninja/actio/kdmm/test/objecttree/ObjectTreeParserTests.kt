@@ -1,7 +1,10 @@
 package ninja.actio.kdmm.test.objecttree
 
+import ninja.actio.kdmm.dm.getFileInternal
+import ninja.actio.kdmm.dm.objecttree.ObjectTree
 import ninja.actio.kdmm.dm.objecttree.ObjectTreeParser
 import org.junit.jupiter.api.Test
+import java.io.File
 import kotlin.test.assertEquals
 
 class ObjectTreeParserTests {
@@ -66,9 +69,21 @@ class ObjectTreeParserTests {
     }
 
     @Test
+    fun `stddef Parse Test`() {
+        val stddefParser = ObjectTreeParser()
+        stddefParser.subParse(getFileInternal("stddef.dm"))
+        //TODO: I really shouldn't be putting a todo in a test func, but make this more than a unit test
+    }
+
+    @Test
     fun `Parser Minimal Test`() {
-        val unitTestParser = ObjectTreeParser()
-        val testList
-        unitTestParser.parse()
+        val minimalTestParser = ObjectTreeParser()
+        val minimalDME = classLoader.getResource("environments/minimal/minimal.dme")
+        val expectedObjectTree = ObjectTree()
+        val testItem = expectedObjectTree.getOrCreate("/obj/test")
+        testItem.setVar("test_var", 10)
+        testItem.setVar("test_text", "blah")
+        minimalTestParser.parseDME(File(minimalDME.path))
+        assertEquals(expectedObjectTree, minimalTestParser.objectTree)
     }
 }

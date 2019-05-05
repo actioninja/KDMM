@@ -1,3 +1,3 @@
 /obj/test
-    var/testVar = 10
-    var/testText = "blah"
+    var/test_var = 10
+    var/test_text = "blah"
