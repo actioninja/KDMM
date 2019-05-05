@@ -197,16 +197,16 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             var position = line.indexOf(macro)
             while (position >= 0) {
                 val possibleLoc = position + macro.length
-                if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
+                line = if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
                     val searchPattern = Regex("($macro\\((.+)\\))")
                     val searchResult = searchPattern.find(line)
                     val result = macroParameterResolve(
                         searchResult!!.groupValues[2],
                         replacement
                     ) //Why 2? I'm not sure, java regex was acting weird
-                    line = line.replace(searchResult.groupValues[0], result)
+                    line.replace(searchResult.groupValues[0], result)
                 } else {
-                    line = line.replace(macro, replacement)
+                    line.replace(macro, replacement)
                 }
                 position = line.indexOf(macro)
             }
