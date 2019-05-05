@@ -18,7 +18,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     companion object {
         //based off of FastDMM's regexes
         private val defineRegex = Regex("#define\\s+([\\d\\w]+)\\s+(.+)")
-        private val defineWithParametersRegex = Regex("#define\\s+([\\w\\d]+\\((([_\\w\\d],?\\s?)+)\\))\\s+(.+)")
+        private val defineWithParametersRegex = Regex("#define\\s+([\\w\\d]+)\\((([_\\w\\d],?\\s?)+)\\)\\s+(.+)")
 
     }
 
@@ -98,14 +98,14 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 if (line.startsWith("#define")) {
                     var result = defineRegex.find(line)
                     if (result != null) {
-                        macros[result.groupValues[0]] = macroSubstititue(result.groupValues[1].replace("$", "\\$"))
+                        macros[result.groupValues[1]] = macroSubstititue(result.groupValues[2].replace("$", "\\$"))
                     } else {
                         result = defineWithParametersRegex.find(line)
                         if (result != null) {
                             //TODO: make this less unsafe for parameterized defines
-                            val key = result.groupValues[0]
-                            val parametersList = result.groupValues[1].split(',')
-                            var content = result.groupValues[3]
+                            val key = result.groupValues[1]
+                            val parametersList = result.groupValues[2].split(',')
+                            var content = result.groupValues[4]
                             for ((i, parameter) in parametersList.withIndex()) {
                                 content = content.replace(parameter.trim(), "{{{$i}}}")
                             }
@@ -188,6 +188,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 }
             }
         }
+        logger.debug { "Finished parse, resulting object tree: $objectTree" }
     }
 
     fun subParse(stream: InputStream) {
@@ -208,6 +209,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         for ((macro, replacement) in macros) {
             var position = line.indexOf(macro)
             while (position >= 0) {
+                logger.debug { "Found macro in line: $line" }
                 val possibleLoc = position + macro.length
                 line = if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
                     val searchPattern = Regex("($macro\\((.+)\\))")
