@@ -163,7 +163,7 @@ class ObjectTreeParserTests {
     @Test
     fun `Macro Parameter Resolution`() {
         //First test
-        val parameters = "test1, test2"
+        val parameters = listOf("test1", "test2")
         val content = "({{{0}}} + asdfasdf + ##{{{1}}})"
         val expectedResult = "( test1  + asdfasdf + test2)"
         val result = genericParser.macroParameterResolve(parameters, content)

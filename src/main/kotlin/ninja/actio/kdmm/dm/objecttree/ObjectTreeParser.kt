@@ -132,7 +132,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
             //split along semicolons
             val splitSemi = line.split(';')
-            for(part in splitSemi) {
+            for (part in splitSemi) {
                 for (i in (pathTree.size..indentLevel))
                     pathTree.add("")
                 pathTree[indentLevel] = cleanPath(line.trim())
@@ -210,17 +210,43 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             var position = line.indexOf(macro)
             while (position >= 0) {
                 logger.debug { "Found macro \"$macro\" in line: $line" }
-                val possibleLoc = position + macro.length
+                val possibleOpenLoc = position + macro.length
                 lateinit var target: String
                 lateinit var replace: String
-                if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
-                    val searchPattern = Regex("$macro\\((.+)\\)")
-                    val searchResult = searchPattern.find(line)
-                    val result = macroParameterResolve(
-                        searchResult!!.groupValues[1],
-                        replacement
-                    )
-                    target = searchResult.groupValues[0]
+                if (possibleOpenLoc <= line.lastIndex && line[possibleOpenLoc] == '(') {
+                    var parenLoopPosition = possibleOpenLoc - 1
+                    var openBracket = 0
+                    val lowLevelCommaLocs = mutableListOf<Int>()
+                    do {
+                        parenLoopPosition++
+                        if (line[parenLoopPosition] == '(') openBracket++
+                        else if (line[parenLoopPosition] == ')') openBracket--
+                        else if (line[parenLoopPosition] == ',' && openBracket == 1)
+                            lowLevelCommaLocs.add(parenLoopPosition)
+                    } while (openBracket > 0)
+                    val parameters = line.substring(possibleOpenLoc + 1, parenLoopPosition) //without opening parenthesis
+                    val parameterList = mutableListOf<String>()
+                    if (lowLevelCommaLocs.isEmpty()) {
+                        parameterList.add(parameters)
+                    } else {
+                        val ranges = mutableListOf<IntRange>()
+                        var lastEndLoc = 0
+                        for (int in lowLevelCommaLocs) {
+                            //offset the found int so it's in the range we're looking for, then back by 2 so it's before
+                            val adjusted = (int - possibleOpenLoc) - 2
+                            if (lastEndLoc > 0)
+                                ranges.add((lastEndLoc + 2)..adjusted)
+                            else
+                                ranges.add(lastEndLoc..adjusted)
+                            lastEndLoc = adjusted
+                        }
+                        ranges.add((lastEndLoc + 2)..parameters.lastIndex)
+                        for (range in ranges) {
+                            parameterList.add(parameters.substring(range).trim())
+                        }
+                    }
+                    val result = macroParameterResolve(parameterList, replacement)
+                    target = line.substring(position..parenLoopPosition)
                     replace = result
                 } else {
                     target = macro
@@ -237,15 +263,13 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
     //TODO
     //There is without a doubt a much, much better way to do this, but we tech debt now bois
-    fun macroParameterResolve(parameters: String, content: String): String {
+    fun macroParameterResolve(parameters: List<String>, content: String): String {
         var working = content
-        val parameterList = parameters.split(',')
-        for ((i, parameter) in parameterList.withIndex()) {
+        for ((i, parameter) in parameters.withIndex()) {
             val target = "{{{$i}}}"
             val targetNoSpace = "##$target"
-            val replacement = parameter.trim()
-            working = working.replace(targetNoSpace, replacement)
-            working = working.replace(target, " $replacement ")
+            working = working.replace(targetNoSpace, parameter)
+            working = working.replace(target, " $parameter ")
         }
         return working
     }
