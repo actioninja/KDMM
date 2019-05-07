@@ -98,7 +98,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 if (line.startsWith("#define")) {
                     var result = defineRegex.find(line)
                     if (result != null) {
-                        macros[result.groupValues[1]] = macroSubstititue(result.groupValues[2].replace("$", "\\$"))
+                        macros[result.groupValues[1]] = result.groupValues[2].replace("$", "\\$")
                     } else {
                         result = defineWithParametersRegex.find(line)
                         if (result != null) {
@@ -109,7 +109,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             for ((i, parameter) in parametersList.withIndex()) {
                                 content = content.replace(parameter.trim(), "{{{$i}}}")
                             }
-                            macros[key] = macroSubstititue(content)
+                            macros[key] = content
                         } else {
                             logger.error { "#define detected but regex couldn't parse it: $line" }
                         }
@@ -209,19 +209,26 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         for ((macro, replacement) in macros) {
             var position = line.indexOf(macro)
             while (position >= 0) {
-                logger.debug { "Found macro in line: $line" }
+                logger.debug { "Found macro \"$macro\" in line: $line" }
                 val possibleLoc = position + macro.length
-                line = if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
-                    val searchPattern = Regex("($macro\\((.+)\\))")
+                lateinit var target: String
+                lateinit var replace: String
+                if (possibleLoc <= line.lastIndex && line[possibleLoc] == '(') {
+                    val searchPattern = Regex("$macro\\((.+)\\)")
                     val searchResult = searchPattern.find(line)
                     val result = macroParameterResolve(
-                        searchResult!!.groupValues[2],
+                        searchResult!!.groupValues[1],
                         replacement
-                    ) //Why 2? I'm not sure, java regex was acting weird
-                    line.replace(searchResult.groupValues[0], result)
+                    )
+                    target = searchResult.groupValues[0]
+                    replace = result
                 } else {
-                    line.replace(macro, replacement)
+                    target = macro
+                    replace = replacement
                 }
+                logger.debug { "attempting to recurse..." }
+                replace = macroSubstititue(replace)
+                line = line.replace(target, replace)
                 position = line.indexOf(macro)
             }
         }
@@ -234,14 +241,11 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         var working = content
         val parameterList = parameters.split(',')
         for ((i, parameter) in parameterList.withIndex()) {
-            val regex = Regex("##\\{\\{\\{$i\\}\\}\\}")
-            var target = "{{{$i}}}"
-            var replacement = " ${parameter.trim()} "
-            if (regex.find(content) != null) {
-                target = "##$target"
-                replacement = replacement.trim()
-            }
-            working = working.replace(target, replacement)
+            val target = "{{{$i}}}"
+            val targetNoSpace = "##$target"
+            val replacement = parameter.trim()
+            working = working.replace(targetNoSpace, replacement)
+            working = working.replace(target, " $replacement ")
         }
         return working
     }
