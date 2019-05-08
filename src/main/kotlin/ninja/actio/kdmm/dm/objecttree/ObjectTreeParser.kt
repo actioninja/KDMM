@@ -128,61 +128,123 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             }
 
             //substitute any macros in the current line
-            line = macroSubstititue(line)
+            line = macroSubstitute(line)
+
+            // We're not going to be using the active object tree which is probably a bad idea, but I don't think it's
+            // going to cause any issues since I don't think that that's actually done anywhere.
+            // If it does, this is a message to the poor bastard fixing this I have already pre-slapped myself and it
+            // doesn't need to be done
+            val subsets = mutableMapOf<String, String>()
+            //This means that there's inlined definitions. Time for even more cancerous of parsing
+            if (line.contains('{') && line.contains('}')) {
+                //Nasty "do way too much shit" loop
+                var position = 0
+                var openPos = 0
+                var currentObjPath = ""
+                readerloop@ while (true) {
+                    when (line[position]) {
+                        '{' -> {
+                            if (currentObjPath.isNotEmpty()) { //I don't think this is possible but it's here just in case
+                                logger.error { "A line the parser can't handle properly was found:\n $line \n Report this!" }
+                                break@readerloop
+                            }
+                            //If we find an open parenthesis, we store its position, then backtrack to find the object path
+                            openPos = position
+                            var backtrackPos = position - 1
+                            var preSpaceCleared = false // the space between the { and the object path needs to be skipped
+                            if (line[backtrackPos] != ' ') //if this isn't a space, this means there isn't one and so it doesn't need to be skipped
+                                preSpaceCleared = true
+                            while (backtrackPos > 0) { //safety check
+                                if (line[backtrackPos] == ' ') {
+                                    if (preSpaceCleared) {
+                                        break //since we just want an index, we can break to return the result we want
+                                    }
+                                } else {
+                                    preSpaceCleared = true
+                                }
+                                backtrackPos--
+                            }
+                            if(backtrackPos < 0) backtrackPos = 0
+                            currentObjPath = line.substring(backtrackPos.until(openPos - 1)).trim()
+                        }
+                        '}' -> {
+                            if (currentObjPath.isEmpty()) { //Again, shouldn't be possible, but here we are.
+                                logger.error { "A line the parser can't handle properly was found:\n $line \n Report this!" }
+                                break@readerloop
+                            }
+                            val parenthesisContent = line.substring((openPos + 1).until(position - 1)).trim()
+                            subsets[currentObjPath] = parenthesisContent
+                            currentObjPath = ""
+                        }
+                    }
+                    position++
+                    if (position > line.lastIndex) break //failsafe to make sure we don't cause an exception
+                }
+            } else { //no inlines, we can do it the simple(r) way
+                subsets[""] = line.trim()
+            }
+
 
             //split along semicolons
-            val splitSemi = line.split(';')
-            for (part in splitSemi) {
-                for (i in (pathTree.size..indentLevel))
-                    pathTree.add("")
-                pathTree[indentLevel] = cleanPath(line.trim())
-                if (pathTree.size > indentLevel + 1) {
-                    var i = pathTree.lastIndex
-                    while (i > indentLevel) {
-                        pathTree.removeAt(i)
-                        i--
+            for ((path, content) in subsets) {
+                val splitSemi = content.split(';')
+                for (part in splitSemi) {
+                    for (i in (pathTree.size..indentLevel))
+                        pathTree.add("")
+                    pathTree[indentLevel] = cleanPath(line.trim())
+                    if (pathTree.size > indentLevel + 1) {
+                        var i = pathTree.lastIndex
+                        while (i > indentLevel) {
+                            pathTree.removeAt(i)
+                            i--
+                        }
                     }
-                }
-                val fullPathBuilder = StringBuilder()
-                for (pathComponent in pathTree)
-                    fullPathBuilder.append(pathComponent)
-                var fullPath = fullPathBuilder.toString()
-                val divided = fullPath.split('/')
-                //rebuild again but with only important shit
-                val affectedBuilder = StringBuilder()
-                for (string in divided) {
-                    if (string.isEmpty()) continue
-                    if ((string == "static") or (string == "global") or (string == "tmp")) continue
-                    if ((string == "proc") or (string == "verb") or (string == "var")) break
-                    if (string.contains('=') or string.contains('(')) break
-                    affectedBuilder.append("/$string")
-                }
-                val item = objectTree.getOrCreate(affectedBuilder.toString())
-                if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
-                    continue
-                fullPath = fullPath.replace("/tmp", "")
-                fullPath = fullPath.replace("/static", "")
-                fullPath = fullPath.replace("/global", "")
-                //parse out var definitions
-                if (fullPath.contains("var/")) {
-                    val removedVar = fullPath.substring(fullPath.lastIndexOf('/') + 1).trim()
-                    val splitResult = mutableListOf<String>()
-                    val splitComma = removedVar.split(',')
-                    for (commaPart in splitComma) {
-                        val splitSemi = commaPart.split(';')
-                        splitResult.addAll(splitSemi)
+                    val fullPathBuilder = StringBuilder()
+                    for (pathComponent in pathTree)
+                        fullPathBuilder.append(pathComponent)
+                    var fullPath = fullPathBuilder.toString()
+                    val divided = fullPath.split('/')
+                    //rebuild again but with only important shit
+                    val affectedBuilder = StringBuilder()
+                    //Here's the spot you may want to change if path trees end up becoming a problem
+                    if (path.isEmpty()) {
+                        for (string in divided) {
+                            if (string.isEmpty()) continue
+                            if ((string == "static") or (string == "global") or (string == "tmp")) continue
+                            if ((string == "proc") or (string == "verb") or (string == "var")) break
+                            if (string.contains('=') or string.contains('(')) break
+                            affectedBuilder.append("/$string")
+                        }
+                    } else {
+                        affectedBuilder.append(path)
                     }
-                    for (resultPart in splitResult) {
-                        val split = resultPart.split('=', limit = 2)
-                        val varName = split[0].trim()
-                        if (split.size > 1) {
-                            if (split[1].contains('"')) {
-                                item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
+                    val item = objectTree.getOrCreate(affectedBuilder.toString())
+                    if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
+                        continue
+                    fullPath = fullPath.replace("/tmp", "")
+                    fullPath = fullPath.replace("/static", "")
+                    fullPath = fullPath.replace("/global", "")
+                    //parse out var definitions
+                    if (fullPath.contains("var/")) {
+                        val removedVar = fullPath.substring(fullPath.lastIndexOf('/') + 1).trim()
+                        val splitResult = mutableListOf<String>()
+                        val splitComma = removedVar.split(',')
+                        for (commaPart in splitComma) {
+                            val splitSemi = commaPart.split(';')
+                            splitResult.addAll(splitSemi)
+                        }
+                        for (resultPart in splitResult) {
+                            val split = resultPart.split('=', limit = 2)
+                            val varName = split[0].trim()
+                            if (split.size > 1) {
+                                if (split[1].contains('"')) {
+                                    item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
+                                } else {
+                                    item.setVar(varName, split[1].trim(), DMVarType.NUMBER)
+                                }
                             } else {
-                                item.setVar(varName, split[1].trim(), DMVarType.NUMBER)
+                                item.setVar(varName)
                             }
-                        } else {
-                            item.setVar(varName)
                         }
                     }
                 }
@@ -204,7 +266,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         macros[key] = replacement
     }
 
-    fun macroSubstititue(inLine: String): String {
+    fun macroSubstitute(inLine: String): String {
         var line = inLine
         for ((macro, replacement) in macros) {
             var position = line.indexOf(macro)
@@ -219,10 +281,11 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     val lowLevelCommaLocs = mutableListOf<Int>()
                     do {
                         parenLoopPosition++
-                        if (line[parenLoopPosition] == '(') openBracket++
-                        else if (line[parenLoopPosition] == ')') openBracket--
-                        else if (line[parenLoopPosition] == ',' && openBracket == 1)
-                            lowLevelCommaLocs.add(parenLoopPosition)
+                        when(line[parenLoopPosition]) {
+                            '(' -> openBracket++
+                            ')' -> openBracket--
+                            ',' -> if (openBracket == 1) lowLevelCommaLocs.add(parenLoopPosition)
+                        }
                     } while (openBracket > 0)
                     val parameters = line.substring(possibleOpenLoc + 1, parenLoopPosition) //without opening parenthesis
                     val parameterList = mutableListOf<String>()
@@ -253,7 +316,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     replace = replacement
                 }
                 logger.debug { "attempting to recurse..." }
-                replace = macroSubstititue(replace)
+                replace = macroSubstitute(replace)
                 line = line.replace(target, replace)
                 position = line.indexOf(macro)
             }

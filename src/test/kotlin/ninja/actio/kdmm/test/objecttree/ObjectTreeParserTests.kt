@@ -5,7 +5,6 @@ import ninja.actio.kdmm.dm.objecttree.ObjectTree
 import ninja.actio.kdmm.dm.objecttree.ObjectTreeParser
 import org.junit.jupiter.api.Test
 import java.io.File
-import kotlin.math.exp
 import kotlin.test.assertEquals
 
 class ObjectTreeParserTests {
@@ -182,7 +181,7 @@ class ObjectTreeParserTests {
             "var/not_a_macro = NO_PARAMETER; var/not_a_macro_2 = PARAMETERIZED(\"param1\", \"param2\", \"param3\")"
         val expected =
             "var/not_a_macro = (THIS IS A REPLACEMENT); var/not_a_macro_2 = (THIS IS A REPLACEMENT WITH PARAMETERS:  \"param1\" , \"param2\",  \"param3\" )"
-        val result = parserWithMacros.macroSubstititue(preSub)
+        val result = parserWithMacros.macroSubstitute(preSub)
         assertEquals(expected, result)
     }
 
