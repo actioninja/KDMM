@@ -191,7 +191,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 for (part in splitSemi) {
                     for (i in (pathTree.size..indentLevel))
                         pathTree.add("")
-                    pathTree[indentLevel] = cleanPath(line.trim())
+                    pathTree[indentLevel] = cleanPath(content.trim())
                     if (pathTree.size > indentLevel + 1) {
                         var i = pathTree.lastIndex
                         while (i > indentLevel) {
@@ -199,6 +199,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             i--
                         }
                     }
+                    pathTree.add(path)
                     val fullPathBuilder = StringBuilder()
                     for (pathComponent in pathTree)
                         fullPathBuilder.append(pathComponent)
@@ -207,7 +208,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     //rebuild again but with only important shit
                     val affectedBuilder = StringBuilder()
                     //Here's the spot you may want to change if path trees end up becoming a problem
-                    if (path.isEmpty()) {
                         for (string in divided) {
                             if (string.isEmpty()) continue
                             if ((string == "static") or (string == "global") or (string == "tmp")) continue
@@ -215,9 +215,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             if (string.contains('=') or string.contains('(')) break
                             affectedBuilder.append("/$string")
                         }
-                    } else {
-                        affectedBuilder.append(path)
-                    }
                     val item = objectTree.getOrCreate(affectedBuilder.toString())
                     if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
                         continue
