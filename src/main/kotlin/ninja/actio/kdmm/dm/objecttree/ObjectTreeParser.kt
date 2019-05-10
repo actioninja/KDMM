@@ -132,7 +132,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             //substitute any macros in the current line
             line = macroSubstitute(line)
 
-            val subsets = mutableMapOf<String, String>()
+            val subsets = mutableListOf<Pair<String, String>>()
             //This means that there's inlined definitions. Time for even more cancerous of parsing
             if (line.contains('{') && line.contains('}')) {
                 //Nasty "do way too much shit" loop
@@ -172,7 +172,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                                 break@readerloop
                             }
                             val parenthesisContent = line.substring((openPos + 1).until(position - 1)).trim()
-                            subsets[currentObjPath] = parenthesisContent
+                            subsets.add(Pair(currentObjPath, parenthesisContent))
                             currentObjPath = ""
                         }
                     }
@@ -180,23 +180,23 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     if (position > line.lastIndex) break //failsafe to make sure we don't cause an exception
                 }
             } else { //no inlines, we can do it the simple(r) way
-                subsets[""] = line.trim()
+                subsets.add(Pair("", line.trim()))
             }
 
 
             //split along semicolons
-            for ((path, content) in subsets) {
-                val splitSemi = content.split(';')
+            for (pair in subsets) {
+                val splitSemi = pair.second.split(';')
                 for (part in splitSemi) {
-                    if (content.isBlank()) continue
+                    if (pair.second.isBlank()) continue
                     for (i in (pathTree.size..(indentLevel + 1)))
                         pathTree.add("")
 
                     var offsetTopLevel = indentLevel
-                    if (path.isEmpty())
-                        pathTree[indentLevel] = cleanPath(content)
+                    if (pair.first.isEmpty())
+                        pathTree[indentLevel] = cleanPath(pair.second)
                     else {
-                        pathTree[indentLevel] = cleanPath(path)
+                        pathTree[indentLevel] = cleanPath(pair.first)
                         offsetTopLevel++
                         pathTree[offsetTopLevel] = cleanPath("var/${part.trim()}")
                     }
@@ -246,7 +246,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             val split = resultPart.split('=', limit = 2)
                             val varName = split[0].trim()
                             if (split.size > 1) {
-                                if (split[1].contains('"')) {
+                                if (split[1].contains('"') or split[1].contains('(')) {
                                     val concatSplit = split[1].trim().split('+')
                                     if (concatSplit.size <= 1) {
                                         item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
