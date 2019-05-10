@@ -174,7 +174,7 @@ class ObjectTreeParserTests {
         val parserWithMacros = ObjectTreeParser()
         parserWithMacros.addMacro("NO_PARAMETER", "(THIS IS A REPLACEMENT)")
         parserWithMacros.addMacro(
-            "PARAMETERIZED",
+            "^~\$#%PARAMETERIZED",
             "(THIS IS A REPLACEMENT WITH PARAMETERS: {{{0}}}, ##{{{1}}}, {{{2}}})"
         )
         val preSub =
@@ -218,7 +218,63 @@ class ObjectTreeParserTests {
         val testItem = expectedObjectTree.getOrCreate("/obj/test")
         testItem.setVar("test_var", 10)
         testItem.setVar("test_text", "blah")
+        fun helperPartial(type: String, iconBase: String, color: String) {
+            val base = expectedObjectTree.getOrCreate(type)
+            base.setVar("pipe_color", color)
+            base.setVar("color", color)
+            val visible = expectedObjectTree.getOrCreate("$type/visible")
+            visible.setVar("level", "PIPE_VISIBLE_LEVEL")
+            visible.setVar("layer", "GAS_PIPE_VISIBLE_LAYER")
+            val visible1 = expectedObjectTree.getOrCreate("$type/visible/layer1")
+            visible1.setVar("piping_layer", 1)
+            visible1.setVar("icon_state", "$iconBase-1")
+            val visible3 = expectedObjectTree.getOrCreate("$type/visible/layer3")
+            visible3.setVar("piping_layer", 3)
+            visible3.setVar("icon_state", "$iconBase-3")
+            val hidden = expectedObjectTree.getOrCreate("$type/hidden")
+            hidden.setVar("level", "PIPE_HIDDEN_LEVEL")
+            val hidden1 = expectedObjectTree.getOrCreate("$type/hidden/layer1")
+            hidden1.setVar("piping_layer", 1)
+            hidden1.setVar("icon_state", "$iconBase-1")
+            val hidden3 = expectedObjectTree.getOrCreate("$type/hidden/layer3")
+            hidden3.setVar("piping_layer", 3)
+            hidden3.setVar("icon_state", "$iconBase-3")
+        }
+        fun helperNamed(type: String, iconBase: String, name: String, color: String) {
+            helperPartial(type, iconBase, color)
+            val typeInTree = expectedObjectTree.getOrCreate(type)
+            typeInTree.setVar("name", name)
+        }
+        val unnamed = mapOf(
+            "general" to "null",
+            "yellow" to "rgb(255, 198, 0)",
+            "cyan" to "rgb(0, 255, 249)",
+            "green" to "rgb(30, 255, 0)",
+            "orange" to "rgb(255, 129, 25)",
+            "purple" to "rgb(128, 0, 182)",
+            "dark" to "rgb(69, 69, 69)",
+            "brown" to "rgb(178, 100, 56)",
+            "violet" to "rgb(64, 0, 128)"
+        )
+        val named = mapOf(
+            "scrubbers" to Pair("scrubbers pipe", "rgb(255, 0, 0)"),
+            "supply" to Pair("air supply pipe", "rgb(0, 0, 255)"),
+            "supplymain" to Pair("main air supply pipe", "rgb(130, 43, 255)")
+        )
+        for ((type, color) in unnamed) {
+            helperPartial("/obj/machinery/atmospherics/pipe/simple/$type", "pipe11", color)
+            helperPartial("/obj/machinery/atmospherics/pipe/manifold/$type", "manifold", color)
+            helperPartial("/obj/machinery/atmospherics/pipe/manifold4w/$type", "manifold4w", color)
+        }
+
+        for ((type, pair) in named) {
+            helperNamed("/obj/machinery/atmospherics/pipe/simple/$type", "pipe11", pair.first, pair.second)
+            helperNamed("/obj/machinery/atmospherics/pipe/manifold/$type", "manifold", pair.first, pair.second)
+            helperNamed("/obj/machinery/atmospherics/pipe/manifold4w/$type", "manifold4w", pair.first, pair.second)
+        }
         basicTestParser.parseDME(File(basicDME.path))
+        //string being compared to make the unit test result nicer
+        assertEquals(expectedObjectTree.toString(), basicTestParser.objectTree.toString())
     }
 
     //Live TG is what it sounds like, it's a live version of a tgcode repo. Since it's too large to easily know what the
