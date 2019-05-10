@@ -19,7 +19,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         //based off of FastDMM's regexes
         private val defineRegex = Regex("#define\\s+([\\d\\w]+)\\s+(.+)")
         private val defineWithParametersRegex = Regex("#define\\s+([\\w\\d]+)\\((([_\\w\\d],?\\s?)+)\\)\\s+(.+)")
-
+        //TODO: properly refactor this to not be this hacky
+        private val parameterPrefix = "^~\$#%"
     }
 
     //Used for UI elements
@@ -109,7 +110,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             for ((i, parameter) in parametersList.withIndex()) {
                                 content = content.replace(parameter.trim(), "{{{$i}}}")
                             }
-                            macros[key] = content
+                            //TODO: proper refactor on this
+                            macros["$parameterPrefix$key"] = content
                         } else {
                             logger.error { "#define detected but regex couldn't parse it: $line" }
                         }
@@ -130,10 +132,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             //substitute any macros in the current line
             line = macroSubstitute(line)
 
-            // We're not going to be using the active object tree which is probably a bad idea, but I don't think it's
-            // going to cause any issues since I don't think that that's actually done anywhere.
-            // If it does, this is a message to the poor bastard fixing this I have already pre-slapped myself and it
-            // doesn't need to be done
             val subsets = mutableMapOf<String, String>()
             //This means that there's inlined definitions. Time for even more cancerous of parsing
             if (line.contains('{') && line.contains('}')) {
@@ -151,7 +149,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             //If we find an open parenthesis, we store its position, then backtrack to find the object path
                             openPos = position
                             var backtrackPos = position - 1
-                            var preSpaceCleared = false // the space between the { and the object path needs to be skipped
+                            var preSpaceCleared =
+                                false // the space between the { and the object path needs to be skipped
                             if (line[backtrackPos] != ' ') //if this isn't a space, this means there isn't one and so it doesn't need to be skipped
                                 preSpaceCleared = true
                             while (backtrackPos > 0) { //safety check
@@ -164,7 +163,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                                 }
                                 backtrackPos--
                             }
-                            if(backtrackPos < 0) backtrackPos = 0
+                            if (backtrackPos < 0) backtrackPos = 0
                             currentObjPath = line.substring(backtrackPos.until(openPos - 1)).trim()
                         }
                         '}' -> {
@@ -217,13 +216,13 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     //rebuild again but with only important shit
                     val affectedBuilder = StringBuilder()
                     //Here's the spot you may want to change if path trees end up becoming a problem
-                        for (string in divided) {
-                            if (string.isEmpty()) continue
-                            if ((string == "static") or (string == "global") or (string == "tmp")) continue
-                            if ((string == "proc") or (string == "verb") or (string == "var")) break
-                            if (string.contains('=') or string.contains('(')) break
-                            affectedBuilder.append("/$string")
-                        }
+                    for (string in divided) {
+                        if (string.isEmpty()) continue
+                        if ((string == "static") or (string == "global") or (string == "tmp")) continue
+                        if ((string == "proc") or (string == "verb") or (string == "var")) break
+                        if (string.contains('=') or string.contains('(')) break
+                        affectedBuilder.append("/$string")
+                    }
                     val item = objectTree.getOrCreate(affectedBuilder.toString())
                     if (fullPath.contains('(') and (fullPath.indexOf('(') < fullPath.lastIndexOf('/')))
                         continue
@@ -249,7 +248,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             if (split.size > 1) {
                                 if (split[1].contains('"')) {
                                     val concatSplit = split[1].trim().split('+')
-                                    if(concatSplit.size <= 1) {
+                                    if (concatSplit.size <= 1) {
                                         item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
                                     } else {
                                         val concatBuilder = StringBuilder()
@@ -269,7 +268,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 }
             }
         }
-        logger.debug { "Finished parse, resulting object tree: $objectTree" }
     }
 
     fun subParse(stream: InputStream) {
@@ -288,25 +286,26 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     fun macroSubstitute(inLine: String): String {
         var line = inLine
         for ((macro, replacement) in macros) {
-            var position = line.indexOf(macro)
-            while (position >= 0) {
-                logger.debug { "Found macro \"$macro\" in line: $line" }
-                val possibleOpenLoc = position + macro.length
-                lateinit var target: String
-                lateinit var replace: String
-                if (possibleOpenLoc <= line.lastIndex && line[possibleOpenLoc] == '(') {
-                    var parenLoopPosition = possibleOpenLoc - 1
+            if (macro.startsWith(parameterPrefix)) {
+                val trueMacro = macro.removePrefix(parameterPrefix)
+                val regex = Regex("\\b$trueMacro\\(")
+                var result = regex.find(line)
+                while (result != null) {
+                    logger.debug { "Found parametered macro \"$trueMacro\" in line: $line" }
+                    val openParenthesisPosition = result.range.first + trueMacro.length
+                    var parenLoopPosition = openParenthesisPosition - 1
                     var openBracket = 0
                     val lowLevelCommaLocs = mutableListOf<Int>()
                     do {
                         parenLoopPosition++
-                        when(line[parenLoopPosition]) {
+                        when (line[parenLoopPosition]) {
                             '(' -> openBracket++
                             ')' -> openBracket--
                             ',' -> if (openBracket == 1) lowLevelCommaLocs.add(parenLoopPosition)
                         }
                     } while (openBracket > 0)
-                    val parameters = line.substring(possibleOpenLoc + 1, parenLoopPosition) //without opening parenthesis
+                    val parameters =
+                        line.substring(openParenthesisPosition + 1, parenLoopPosition) //without opening parenthesis
                     val parameterList = mutableListOf<String>()
                     if (lowLevelCommaLocs.isEmpty()) {
                         parameterList.add(parameters)
@@ -315,7 +314,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                         var lastEndLoc = 0
                         for (int in lowLevelCommaLocs) {
                             //offset the found int so it's in the range we're looking for, then back by 2 so it's before
-                            val adjusted = (int - possibleOpenLoc) - 2
+                            val adjusted = (int - openParenthesisPosition) - 2
                             if (lastEndLoc > 0)
                                 ranges.add((lastEndLoc + 2)..adjusted)
                             else
@@ -327,17 +326,15 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             parameterList.add(parameters.substring(range).trim())
                         }
                     }
-                    val result = macroParameterResolve(parameterList, replacement)
-                    target = line.substring(position..parenLoopPosition)
-                    replace = result
-                } else {
-                    target = macro
-                    replace = replacement
+                    var replace = macroParameterResolve(parameterList, replacement)
+                    logger.debug { "attempting to recurse..." }
+                    replace = macroSubstitute(replace)
+                    line = line.replaceRange((result.range.first..parenLoopPosition), replace)
+                    result = regex.find(line)
                 }
-                logger.debug { "attempting to recurse..." }
-                replace = macroSubstitute(replace)
-                line = line.replace(target, replace)
-                position = line.indexOf(macro)
+            } else {
+                val regex = Regex("\\b$macro\\b")
+                line = regex.replace(line, replacement)
             }
         }
         return line
