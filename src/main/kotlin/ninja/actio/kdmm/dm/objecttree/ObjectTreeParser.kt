@@ -189,17 +189,26 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             for ((path, content) in subsets) {
                 val splitSemi = content.split(';')
                 for (part in splitSemi) {
-                    for (i in (pathTree.size..indentLevel))
+                    if (content.isBlank()) continue
+                    for (i in (pathTree.size..(indentLevel + 1)))
                         pathTree.add("")
-                    pathTree[indentLevel] = cleanPath(content.trim())
-                    if (pathTree.size > indentLevel + 1) {
+
+                    var offsetTopLevel = indentLevel
+                    if (path.isEmpty())
+                        pathTree[indentLevel] = cleanPath(content)
+                    else {
+                        pathTree[indentLevel] = cleanPath(path)
+                        offsetTopLevel++
+                        pathTree[offsetTopLevel] = cleanPath("var/${part.trim()}")
+                    }
+
+                    if (pathTree.size > offsetTopLevel) {
                         var i = pathTree.lastIndex
-                        while (i > indentLevel) {
+                        while (i > offsetTopLevel) {
                             pathTree.removeAt(i)
                             i--
                         }
                     }
-                    pathTree.add(path)
                     val fullPathBuilder = StringBuilder()
                     for (pathComponent in pathTree)
                         fullPathBuilder.append(pathComponent)
@@ -225,7 +234,11 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     if (fullPath.contains("var/")) {
                         val removedVar = fullPath.substring(fullPath.lastIndexOf('/') + 1).trim()
                         val splitResult = mutableListOf<String>()
-                        val splitComma = removedVar.split(',')
+                        //TODO: proper handling for parameters instead of this somewhat hacky solution
+                        val splitComma = if (removedVar.contains('('))
+                            listOf(removedVar)
+                        else
+                            removedVar.split(',')
                         for (commaPart in splitComma) {
                             val splitSemi = commaPart.split(';')
                             splitResult.addAll(splitSemi)
@@ -235,7 +248,16 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             val varName = split[0].trim()
                             if (split.size > 1) {
                                 if (split[1].contains('"')) {
-                                    item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
+                                    val concatSplit = split[1].trim().split('+')
+                                    if(concatSplit.size <= 1) {
+                                        item.setVar(varName, split[1].trim().removeSurrounding("\"", "\""))
+                                    } else {
+                                        val concatBuilder = StringBuilder()
+                                        for (concat in concatSplit) {
+                                            concatBuilder.append(concat.trim().removeSurrounding("\"", "\""))
+                                        }
+                                        item.setVar(varName, concatBuilder.toString())
+                                    }
                                 } else {
                                     item.setVar(varName, split[1].trim(), DMVarType.NUMBER)
                                 }
