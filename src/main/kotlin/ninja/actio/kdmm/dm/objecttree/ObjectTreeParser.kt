@@ -91,6 +91,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     logger.debug { "Undefining: $macroName" }
                     if (macros.containsKey(macroName)) {
                         macros.remove(macroName)
+                    } else if (macros.containsKey("$parameterPrefix$macroName")) {
+                        macros.remove("$parameterPrefix$macroName")
                     } else {
                         logger.error { "Tried to remove $macroName, but it wasn't in defines" }
                     }
