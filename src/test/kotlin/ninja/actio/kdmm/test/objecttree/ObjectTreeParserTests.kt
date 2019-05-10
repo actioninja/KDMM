@@ -281,6 +281,8 @@ class ObjectTreeParserTests {
     //result should be, this is a pure unit test
     @Test
     fun `Parser TG Live Test`() {
-
+        val tgLiveTestParser = ObjectTreeParser()
+        val liveDME = classLoader.getResource("environments/livetg/tgstation.dme")
+        tgLiveTestParser.parseDME(File(liveDME.path))
     }
 }

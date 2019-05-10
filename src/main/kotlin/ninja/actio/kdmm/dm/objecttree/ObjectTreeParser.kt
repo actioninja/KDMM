@@ -59,6 +59,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
         val pathTree = mutableListOf<String>()
 
+        var inString = false
         for (l in lines) {
             var line = l
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
@@ -137,49 +138,78 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             val subsets = mutableListOf<Pair<String, String>>()
             //This means that there's inlined definitions. Time for even more cancerous of parsing
             if (line.contains('{') && line.contains('}')) {
-                //Nasty "do way too much shit" loop
-                var position = 0
-                var openPos = 0
-                var currentObjPath = ""
-                readerloop@ while (true) {
-                    when (line[position]) {
-                        '{' -> {
-                            if (currentObjPath.isNotEmpty()) { //I don't think this is possible but it's here just in case
-                                logger.error { "A line the parser can't handle properly was found:\n $line \n Report this!" }
-                                break@readerloop
-                            }
-                            //If we find an open parenthesis, we store its position, then backtrack to find the object path
-                            openPos = position
-                            var backtrackPos = position - 1
-                            var preSpaceCleared =
-                                false // the space between the { and the object path needs to be skipped
-                            if (line[backtrackPos] != ' ') //if this isn't a space, this means there isn't one and so it doesn't need to be skipped
-                                preSpaceCleared = true
-                            while (backtrackPos > 0) { //safety check
-                                if (line[backtrackPos] == ' ') {
-                                    if (preSpaceCleared) {
-                                        break //since we just want an index, we can break to return the result we want
-                                    }
-                                } else {
-                                    preSpaceCleared = true
-                                }
-                                backtrackPos--
-                            }
-                            if (backtrackPos < 0) backtrackPos = 0
-                            currentObjPath = line.substring(backtrackPos.until(openPos - 1)).trim()
+                logger.debug { "Advanced subparsing line: $line" }
+                //First we gotta make sure the {} isn't in a string
+                var skipEverything = false
+                var inString = false
+                var escaped = false
+                quoteChecker@ for (char in line) {
+                    when (char) {
+                        '\\' -> {
+                            escaped = true
+                            continue@quoteChecker
                         }
-                        '}' -> {
-                            if (currentObjPath.isEmpty()) { //Again, shouldn't be possible, but here we are.
-                                logger.error { "A line the parser can't handle properly was found:\n $line \n Report this!" }
-                                break@readerloop
+                        '{', '}' -> {
+                            if (inString) {
+                                skipEverything = true
+                                break@quoteChecker
                             }
-                            val parenthesisContent = line.substring((openPos + 1).until(position - 1)).trim()
-                            subsets.add(Pair(currentObjPath, parenthesisContent))
-                            currentObjPath = ""
+                        }
+                        '"' -> {
+                            if (!escaped)
+                                inString = !inString
                         }
                     }
-                    position++
-                    if (position > line.lastIndex) break //failsafe to make sure we don't cause an exception
+                    if (escaped) escaped = false
+                }
+                if (!skipEverything) {
+                    //Nasty "do way too much shit" loop
+                    var position = 0
+                    var openPos = 0
+                    var currentObjPath = ""
+                    readerloop@ while (true) {
+                        when (line[position]) {
+                            '{' -> {
+                                if (currentObjPath.isNotEmpty()) { //I don't think this is possible but it's here just in case
+                                    logger.error { "A line the parser can't handle properly was found:\n $line \n Report this!" }
+                                    break@readerloop
+                                }
+                                //If we find an open parenthesis, we store its position, then backtrack to find the object path
+                                openPos = position
+                                var backtrackPos = position - 1
+                                var preSpaceCleared =
+                                    false // the space between the { and the object path needs to be skipped
+                                if (line[backtrackPos] != ' ') //if this isn't a space, this means there isn't one and so it doesn't need to be skipped
+                                    preSpaceCleared = true
+                                while (backtrackPos > 0) { //safety check
+                                    if (line[backtrackPos] == ' ') {
+                                        if (preSpaceCleared) {
+                                            break //since we just want an index, we can break to return the result we want
+                                        }
+                                    } else {
+                                        preSpaceCleared = true
+                                    }
+                                    backtrackPos--
+                                }
+                                if (backtrackPos < 0) backtrackPos = 0
+                                currentObjPath = line.substring(backtrackPos.until(openPos - 1)).trim()
+                            }
+                            '}' -> {
+                                if (currentObjPath.isEmpty()) { //Again, shouldn't be possible, but here we are.
+                                    logger.error { "A line the parser can't handle properly was found:\n $line \n Report this!" }
+                                    break@readerloop
+                                }
+                                val parenthesisContent = line.substring((openPos + 1).until(position - 1)).trim()
+                                subsets.add(Pair(currentObjPath, parenthesisContent))
+                                currentObjPath = ""
+                            }
+                        }
+                        position++
+                        if (position > line.lastIndex) break //failsafe to make sure we don't cause an exception
+                    }
+                } else {
+                    //wasn't a real inline
+                    subsets.add(Pair("", line.trim()))
                 }
             } else { //no inlines, we can do it the simple(r) way
                 subsets.add(Pair("", line.trim()))
@@ -241,8 +271,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                         else
                             removedVar.split(',')
                         for (commaPart in splitComma) {
-                            val splitSemi = commaPart.split(';')
-                            splitResult.addAll(splitSemi)
+                            val splitSemiButDeeper = commaPart.split(';')
+                            splitResult.addAll(splitSemiButDeeper)
                         }
                         for (resultPart in splitResult) {
                             val split = resultPart.split('=', limit = 2)
