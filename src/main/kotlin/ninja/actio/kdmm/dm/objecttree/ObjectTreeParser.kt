@@ -65,6 +65,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
             //Preprocesser commands, look for #define, #inclue, etc.
             if (line.trim().startsWith('#')) {
+                line = line.trim()
                 if (line.startsWith("#include")) {
                     var include = line.split(" ")[1]
                     var prefix = ""
@@ -125,6 +126,9 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                         }
                     }
                     continue
+                }
+                if (line.startsWith("#error") or line.startsWith("#warn")) {
+                    continue //this doesn't need handling
                 }
                 //TODO: ifs and other conditionals
                 logger.error { "Unsupported preprocessor command found: $line" }
