@@ -146,6 +146,10 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             //substitute any macros in the current line
             line = macroSubstitute(line)
 
+            //for some reason some html is still slipping through, I just want this working already so we tech debt now bois
+            //TODO: fix this hack that manually skips a fucked up case
+            if (line.startsWith('<')) continue
+
             val subsets = mutableListOf<Pair<String, String>>()
             //This means that there's inlined definitions. Time for even more cancerous of parsing
             //The extra !'s are special cases to make sure shit that shouldn't be included isn't
