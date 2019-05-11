@@ -1,10 +1,7 @@
 package ninja.actio.kdmm.dm.objecttree
 
 import mu.KotlinLogging
-import ninja.actio.kdmm.dm.SYSTEM_SEPARATOR
-import ninja.actio.kdmm.dm.cleanPath
-import ninja.actio.kdmm.dm.getFileInternal
-import ninja.actio.kdmm.dm.stripComments
+import ninja.actio.kdmm.dm.*
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
@@ -62,6 +59,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         var inString = false
         for (l in lines) {
             var line = l
+
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
             //Preprocesser commands, look for #define, #inclue, etc.
             if (line.trim().startsWith('#')) {
@@ -391,7 +389,9 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         val lines = mutableListOf<String>()
         val runOn = StringBuilder()
         lateinit var line: String
+        var inBackslash = false
         var firstMultiline = true
+        var inString = false
 
         reader.forEachLine {
             line = it
@@ -399,22 +399,59 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             line = line.replace('\t', ' ')
             line = line.replace("    ", " ")
             if (line.isNotBlank()) {
+                //If it's \'d or we have an odd number of "
                 if (line.endsWith('\\')) {
                     line = line.removeSuffix("\\")
+                    inBackslash = true
                     if (firstMultiline) {
                         firstMultiline = false
                     } else {
                         line = line.trimStart()
                     }
                     runOn.append(line)
-
-                } else {
+                } else if (inBackslash) {
                     if (!firstMultiline)
                         line = line.trimStart()
                     runOn.append(line)
                     line = runOn.toString()
                     runOn.clear()
                     firstMultiline = true
+                    inBackslash = false
+                    lines.add(line)
+                } else if (inString or ((line.numberOf('"') > 0) and (line.numberOf('"') % 2 != 0))) {
+                    //Count of NONESCAPED "
+                    var trueCount = 0
+                    var escapeFound = false
+                    charLoop@ for (char in line) {
+                        when(char) {
+                            '"' -> {
+                                if (!escapeFound) trueCount++
+                            }
+                            '\\' -> {
+                                if (!escapeFound) {
+                                    escapeFound = true
+                                    continue@charLoop
+                                }
+                            }
+                        }
+                        if (escapeFound) escapeFound = false
+                    }
+                    if (inString && trueCount == 0) {
+                        runOn.append(line.trim())
+                    } else {
+                        if (trueCount % 2 != 0) {
+                            if (inString) {
+                                runOn.append(line.trimStart())
+                                line = runOn.toString()
+                                runOn.clear()
+                                lines.add(line)
+                            } else {
+                                runOn.append(line.trimEnd())
+                                inString = true
+                            }
+                        }
+                    }
+                } else {
                     lines.add(line)
                 }
             }

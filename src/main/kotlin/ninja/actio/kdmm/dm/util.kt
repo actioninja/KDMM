@@ -25,3 +25,10 @@ fun cleanPath(string: String): String {
     working = working.removeSuffix("/")
     return working
 }
+
+fun String.numberOf(char: Char): Int {
+    var count = 0
+    for (character in this)
+        if (character == char) count++
+    return count
+}

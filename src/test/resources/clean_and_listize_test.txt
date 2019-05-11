@@ -19,3 +19,11 @@
 
 /obj/effect/abstract/ripple/proc/stop_animation()
 	icon_state = "medi_holo_no_anim"
+
+test \
+test
+
+test_meme = "be
+    be\"
+    be
+    be"
