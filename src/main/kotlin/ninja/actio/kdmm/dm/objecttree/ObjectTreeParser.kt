@@ -127,6 +127,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     continue
                 }
                 //TODO: ifs and other conditionals
+                logger.error { "Unsupported preprocessor command found: $line" }
+                continue
             }
             //indentation
             var indentLevel = 0
@@ -406,12 +408,13 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         return working
     }
 
-    //Turns spaces into tabs, strips comments, and single lines multilines, clears blank lines, then returns the file as a list instead of a stream
+    //Turns tabs into spaces, strips comments, and single lines multilines, clears blank lines, then returns the file as a list instead of a stream
     fun cleanAndListize(stream: InputStream): List<String> {
         val reader = BufferedReader(InputStreamReader(stream))
         val lines = mutableListOf<String>()
         val runOn = StringBuilder()
         lateinit var line: String
+        var inBlockComment = false
         var inBackslash = false
         var firstMultiline = true
         var inString = false
@@ -422,8 +425,16 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             line = line.replace('\t', ' ')
             line = line.replace("    ", " ")
             if (line.isNotBlank()) {
-                //If it's \'d or we have an odd number of "
-                if (line.endsWith('\\')) {
+                if (inBlockComment) {
+                    if (line.contains("*/")) {
+                        line = line.substring(((line.indexOf("*/") + 2)..line.lastIndex))
+                        inBlockComment = false
+                    }
+                    //I would put a continue here but lambdas like this don't support it
+                } else if (!inString && line.contains("/*")) {
+                    line = line.substring(0..(line.indexOf("/*") - 1))
+                    inBlockComment = true
+                } else if (line.endsWith('\\')) {
                     line = line.removeSuffix("\\")
                     inBackslash = true
                     if (firstMultiline) {
@@ -446,7 +457,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     var trueCount = 0
                     var escapeFound = false
                     charLoop@ for (char in line) {
-                        when(char) {
+                        when (char) {
                             '"' -> {
                                 if (!escapeFound) trueCount++
                             }
