@@ -58,7 +58,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
         val pathTree = mutableListOf<String>()
 
-        var inString = false
         for (l in lines) {
             var line = l
 
