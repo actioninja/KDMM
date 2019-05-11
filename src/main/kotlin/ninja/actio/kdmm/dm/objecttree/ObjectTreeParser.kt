@@ -15,7 +15,8 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     companion object {
         //based off of FastDMM's regexes
         private val defineRegex = Regex("#define\\s+([\\d\\w]+)\\s+(.+)")
-        private val defineWithParametersRegex = Regex("#define\\s+([\\w\\d]+)\\((([_\\w\\d],?\\s?)+)\\)\\s+(.+)")
+        private val defineWithParametersRegex = Regex("#define\\s+([\\w\\d_]+)\\((([_\\w\\d],?\\s?)+)\\)\\s+(.+)")
+        private val emptyDefineRegex = Regex("#define\\s+([\\w\\d_]+)\\b")
         //TODO: properly refactor this to not be this hacky
         private val parameterPrefix = "^~\$#%"
     }
@@ -28,6 +29,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     private val macros = mutableMapOf<String, String>()
 
     var parseRootDir = ""
+    var parseDir = ""
 
     fun parseDME(file: File) {
         logger.debug { "Parsing DME: $file" }
@@ -40,7 +42,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     fun parseFile(file: File) {
         currentlyParsing = file.absolutePath
         logger.debug { "Beginning parse on $file" }
-        subParse(file.inputStream())
+        subParse(file.inputStream(), file.parent)
     }
 
     //This is largely based off of fastdmm's parser, but with much better macro support
@@ -74,13 +76,13 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                     logger.debug { "Including: \"$include\"" }
                     val realPath = "$prefix$include"
                     if (realPath.endsWith(".dm") or realPath.endsWith(".dme")) {
-                        val includeFile = File("$parseRootDir$SYSTEM_SEPARATOR$realPath")
+                        val includeFile = File("$parseDir$SYSTEM_SEPARATOR$realPath")
                         if (!includeFile.exists()) {
                             logger.error { "Just tried to include a nonexistant file: ${includeFile.path}" }
                             continue
                         }
                         currentInclude++
-                        subParse(includeFile.inputStream())
+                        subParse(includeFile.inputStream(), includeFile.parent)
                     }
                     continue
                 }
@@ -113,7 +115,13 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                             //TODO: proper refactor on this
                             macros["$parameterPrefix$key"] = content
                         } else {
-                            logger.error { "#define detected but regex couldn't parse it: $line" }
+                            result = emptyDefineRegex.find(line)
+                            if (result != null) {
+                                val key = result.groupValues[1]
+                                macros[key] = ""
+                            } else {
+                                logger.error { "#define detected but regex couldn't parse it: $line" }
+                            }
                         }
                     }
                     continue
@@ -317,10 +325,11 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         }
     }
 
-    fun subParse(stream: InputStream) {
+    fun subParse(stream: InputStream, path: String = "") {
         val parser = ObjectTreeParser(objectTree)
         parser.macros.putAll(macros)
         parser.parseRootDir = parseRootDir
+        parser.parseDir = path
         parser.parse(stream)
     }
 
