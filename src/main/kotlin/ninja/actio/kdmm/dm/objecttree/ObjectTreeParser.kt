@@ -63,7 +63,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
             //TODO: turn this into an actual preprocessor instead of whatever this cobbled together mess is
             //Preprocesser commands, look for #define, #inclue, etc.
             if (line.trim().startsWith('#')) {
-                logger.debug { "Found preprocessor command: $line" }
                 if (line.startsWith("#include")) {
                     var include = line.split(" ")[1]
                     var prefix = ""
@@ -135,9 +134,25 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
             val subsets = mutableListOf<Pair<String, String>>()
             //This means that there's inlined definitions. Time for even more cancerous of parsing
-            //The {" part is a hack to make sure that this one weird syntax I don't fully understand is not included here
-            //TODO: figure out a way to make that not a hack
-            if (line.contains('{') && line.contains('}') && !line.contains("{\"")) {
+            //The extra !'s are special cases to make sure shit that shouldn't be included isn't
+            //Hacky case by case work around with some awful shitcode, but it works for now
+            //TODO: figure out a way to make this not a hack
+            val ignoredCases = listOf(
+                "{\"",
+                "\"}",
+                "if(",
+                "if (",
+                "else{",
+                "else {"
+            )
+            var ignored = false
+            for (case in ignoredCases) {
+                if (!line.contains(case)) {
+                    ignored = true
+                    break
+                }
+            }
+            if (!ignored && line.contains('{') && line.contains('}')) {
                 logger.debug { "Advanced subparsing line: $line" }
                 //First we gotta make sure the {} isn't in a string
                 var skipEverything = false
@@ -303,7 +318,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
     }
 
     fun subParse(stream: InputStream) {
-        logger.debug { "Subparsing..." }
         val parser = ObjectTreeParser(objectTree)
         parser.macros.putAll(macros)
         parser.parseRootDir = parseRootDir
@@ -323,7 +337,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 val regex = Regex("\\b$trueMacro\\(")
                 var result = regex.find(line)
                 while (result != null) {
-                    logger.debug { "Found parametered macro \"$trueMacro\" in line: $line" }
                     val openParenthesisPosition = result.range.first + trueMacro.length
                     var parenLoopPosition = openParenthesisPosition - 1
                     var openBracket = 0
@@ -359,7 +372,6 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                         }
                     }
                     var replace = macroParameterResolve(parameterList, replacement)
-                    logger.debug { "attempting to recurse..." }
                     replace = macroSubstitute(replace)
                     line = line.replaceRange((result.range.first..parenLoopPosition), replace)
                     result = regex.find(line)
