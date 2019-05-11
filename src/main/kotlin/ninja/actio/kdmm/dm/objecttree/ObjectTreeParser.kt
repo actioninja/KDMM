@@ -135,7 +135,9 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
 
             val subsets = mutableListOf<Pair<String, String>>()
             //This means that there's inlined definitions. Time for even more cancerous of parsing
-            if (line.contains('{') && line.contains('}')) {
+            //The {" part is a hack to make sure that this one weird syntax I don't fully understand is not included here
+            //TODO: figure out a way to make that not a hack
+            if (line.contains('{') && line.contains('}') && !line.contains("{\"")) {
                 logger.debug { "Advanced subparsing line: $line" }
                 //First we gotta make sure the {} isn't in a string
                 var skipEverything = false
