@@ -157,11 +157,13 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
                 "if(",
                 "if (",
                 "else{",
-                "else {"
+                "else {",
+                ") {",
+                "){"
             )
             var ignored = false
             for (case in ignoredCases) {
-                if (!line.contains(case)) {
+                if (line.contains(case)) {
                     ignored = true
                     break
                 }
