@@ -179,6 +179,12 @@ class ObjectTree {
         }
     }
 
+    val defaultTurf: ObjectTreeItem
+        get() = get(get("/world").getVarValue("turf"))
+
+    val defaultArea: ObjectTreeItem
+        get() = get(get("/world").getVarValue("area"))
+
     val global: ObjectTreeItem
         get() = items[""]!!
 
