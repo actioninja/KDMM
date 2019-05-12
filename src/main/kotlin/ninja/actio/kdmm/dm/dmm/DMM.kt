@@ -46,6 +46,13 @@ data class DMM(
         }
     }
 
+    /**
+     * Gets a key for a [TileInstance]. If the [TileInstance] is already in instances, it will return that one
+     * If it is not, it will grab a new one from the unused keys pool
+     *
+     * @param tileInstance instance to get a key for
+     * @return The resulting key for the instance
+     */
     fun getKeyForInstance(tileInstance: TileInstance): String {
         if (instances.inverse.containsKey(tileInstance)) {
             return instances.inverse[tileInstance]!!
@@ -64,7 +71,7 @@ data class DMM(
         return ""
     }
 
-    fun generateKeys(set: MutableSet<String>, length: Int, prefix: String = "") {
+    private fun generateKeys(set: MutableSet<String>, length: Int, prefix: String = "") {
         if (length <= 0) {
             set.add(prefix)
             return
@@ -75,6 +82,10 @@ data class DMM(
             generateKeys(set, length - 1, "$prefix$char")
     }
 
+    /**
+     * Expands the possible key pool.
+     * This will likely result in a lot of merge conflicts and a huge diff, this should be kept to minimal usage
+     */
     fun expandKeys() {
         keyLength++
         val unusedKeysSet = mutableSetOf<String>()
@@ -132,4 +143,8 @@ data class DMM(
         val world = objectTree.get("/world")
 
     }
+
+    //These functions all make new TileInstances instead of modifying existing ones
+    //Returns the key
+
 }
