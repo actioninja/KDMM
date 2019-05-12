@@ -32,3 +32,15 @@ fun String.numberOf(char: Char): Int {
         if (character == char) count++
     return count
 }
+
+fun String.reverseCase(): String {
+    val charArray = this.toCharArray()
+    for ((i, char) in charArray.withIndex()) {
+        if (char.isUpperCase()) {
+            charArray[i] = char.toLowerCase()
+        } else if (char.isLowerCase()) {
+            charArray[i] = char.toUpperCase()
+        }
+    }
+    return String(charArray)
+}

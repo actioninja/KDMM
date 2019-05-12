@@ -93,7 +93,7 @@ class DMObjectTests {
         val ogInstance = testTree.getOrCreate("/obj/test")
 
         val newInstance = InstanceFactory.parseStringToInstace(testTree, "/obj/test")
-        assertEquals(ogInstance.toStringDM(), newInstance.toStringDM())
+        assertEquals(ogInstance.toStringDMM(), newInstance.toStringDMM())
     }
 
     @Test

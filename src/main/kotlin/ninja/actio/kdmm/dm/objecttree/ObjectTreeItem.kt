@@ -73,7 +73,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
         if (instances.contains(instance))
             return
         instances.add(instance)
-        instances.sortBy { it.toStringDM() }
+        instances.sortBy { it.toStringDMM() }
     }
 
     fun removeInstance(instance: ObjectInstance) {
@@ -89,7 +89,7 @@ class ObjectTreeItem(var path: String, val parent: ObjectTreeItem? = null) : DMO
             else -> path
         }
 
-    override fun toStringDM(tgm: Boolean): String {
+    override fun toStringDMM(tgm: Boolean): String {
         return path
     }
 }

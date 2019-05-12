@@ -25,7 +25,7 @@ class ObjectInstance(
         return parent.getVar(key)
     }
 
-    override fun toStringDM(tgm: Boolean): String {
+    override fun toStringDMM(tgm: Boolean): String {
         val out = StringBuilder(parentType)
         if (vars.isNotEmpty()) {
             out.append('{')
@@ -57,7 +57,7 @@ class ObjectInstance(
             return false
         if (other === this)
             return true
-        if (other.toStringDM() == toStringDM())
+        if (other.toStringDMM() == toStringDMM())
             return true
         return false
     }

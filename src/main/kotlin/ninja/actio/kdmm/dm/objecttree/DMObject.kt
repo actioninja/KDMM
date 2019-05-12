@@ -7,7 +7,7 @@ abstract class DMObject {
 
     abstract fun getVar(key: String): DMVar
     abstract fun isType(typePath: String): Boolean
-    abstract fun toStringDM(tgm: Boolean = false): String
+    abstract fun toStringDMM(tgm: Boolean = false): String
 
     fun getVarValue(key: String): String {
         return getVar(key).value
