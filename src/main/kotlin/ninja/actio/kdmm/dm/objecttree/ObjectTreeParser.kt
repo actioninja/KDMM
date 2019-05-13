@@ -35,7 +35,7 @@ class ObjectTreeParser(var objectTree: ObjectTree = ObjectTree()) {
         logger.debug { "Parsing DME: $file" }
         subParse(getFileInternal("stddef.dm"))
         parseRootDir = file.parent
-
+        objectTree.dmePath = file.path
         parseFile(file)
     }
 

@@ -15,6 +15,7 @@ class ObjectTree {
 
     var iconSize = 32
 
+    //We gotta establish all the default shit that's always there first.
     init {
         //global
         val global = ObjectTreeItem("")
