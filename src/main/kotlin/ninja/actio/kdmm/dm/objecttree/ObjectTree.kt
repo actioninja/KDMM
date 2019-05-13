@@ -4,7 +4,9 @@ import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 
-
+/**
+ * Object that represents a BYOND Object Tree.
+ */
 class ObjectTree {
     val items = mutableMapOf<String, ObjectTreeItem>()
     var dmePath = ""

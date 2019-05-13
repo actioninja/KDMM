@@ -7,7 +7,9 @@ import ninja.actio.kdmm.dm.dmm.diff.DMMDiff
 import ninja.actio.kdmm.dm.dmm.diff.ExpandedKeysDiff
 import ninja.actio.kdmm.dm.dmm.diff.InstanceDiff
 import ninja.actio.kdmm.dm.dmm.diff.MapDiff
+import ninja.actio.kdmm.dm.objecttree.ObjectInstance
 import ninja.actio.kdmm.dm.objecttree.ObjectTree
+import ninja.actio.kdmm.dm.objecttree.ObjectTreeItem
 import java.io.File
 import java.util.*
 
@@ -41,7 +43,7 @@ data class DMM(
         if (instances.containsKey(key)) {
             val instance = instances[key]
             if (instance != null)
-                instance.refCount--
+                instance.refCount++
             map[loc] = key
         }
     }
@@ -125,6 +127,9 @@ data class DMM(
         unusedKeys.addAll(newUnusedKeys)
     }
 
+    /**
+     * Expands/shrinks the map
+     */
     fun setSize(
         newMaxX: Int,
         newMaxY: Int,
@@ -140,11 +145,133 @@ data class DMM(
         minY = newMinY
         minZ = newMinZ
 
-        val world = objectTree.get("/world")
+        val tileInstance = TileInstance.fromString("${objectTree.defaultTurf}, ${objectTree.defaultArea}")
+        val defaultInstance = getKeyForInstance(tileInstance)
 
+        val toRemove = mutableSetOf<Location>()
+        for ((location, key) in map) {
+            if (location.x in (minX..maxX) && location.y in (minY..maxY) && location.z in (minZ..maxZ)) continue
+            instances[key]!!.refCount--
+            toRemove.add(location)
+        }
+        for (location in toRemove) {
+            map.remove(location)
+        }
+        for (x in (minX..maxX)) {
+            for (y in (minY..maxY)) {
+                for (z in (minZ..maxZ)) {
+                    val location = Location(x, y ,z)
+                    if (!map.containsKey(location))
+                        putMap(location, defaultInstance)
+                }
+            }
+        }
     }
 
     //These functions all make new TileInstances instead of modifying existing ones
-    //Returns the key
+    //These are here instead of in the TileInstance class because all of them require a DMM reference to work correctly
+    //Encapsulation, testability, and all that jazz
 
+    /**
+     * Adds an object to an instance, then returns the new key of the resulting instance
+     *
+     * @param oldTileInstance A [TileInstance] to be modified
+     * @param obj An [ObjectInstance] to be added to the tile instance
+     * @return The new key of the resulting instance
+     */
+    fun addObjectToInstance(oldTileInstance: TileInstance, obj: ObjectInstance): String {
+        val tileInstance = TileInstance(oldTileInstance.objs.toMutableList()) //cast is to copy instead of ref
+        if (obj.isType("/area")) {
+            for (lobj in tileInstance.objs) {
+                if(lobj.isType("/area")) {
+                    tileInstance.objs.remove(lobj) //Instances should only ever have one area
+                }
+            }
+        }
+        tileInstance.objs.add(obj)
+        tileInstance.sortObjects()
+        return getKeyForInstance(tileInstance)
+    }
+
+
+    /**
+     * Removes an object from an instance, then returns the new key of the resulting instance
+     *
+     * @param oldTileInstance A [TileInstance] to be modified
+     * @param obj An [ObjectInstance] to be removed from the tile instance
+     * @param removeSubtypes If set to true, subtypes can also be targeted
+     * @return the key of the resulting instance
+     */
+    fun removeObjectFromInstance(oldTileInstance: TileInstance, obj: ObjectInstance, removeSubtypes: Boolean = false): String {
+        val tileInstance = TileInstance(oldTileInstance.objs.toMutableList()) //cast is to copy instead of ref
+        val replacement = if (obj.isType("/area")) {
+            objectTree.defaultArea
+        } else if (obj.isType("/turf")) {
+            var turfCount = 0
+            for (instance in tileInstance.objs) {
+                if(instance.isType("/turf"))
+                    turfCount++
+            }
+            if (turfCount <= 1) objectTree.defaultTurf else ObjectTreeItem("")
+        } else {
+            ObjectTreeItem("")
+        }
+        if (removeSubtypes) {
+            var toDel = ObjectInstance(ObjectTreeItem(""))
+            for (objIn in tileInstance.objs) {
+                if (objIn == obj || objIn.isType(obj.toStringDMM())) {
+                    toDel = objIn
+                    break
+                }
+            }
+            if (toDel == ObjectInstance(ObjectTreeItem(""))) return getKeyForInstance(oldTileInstance)
+            if (replacement != ObjectTreeItem(""))
+                tileInstance.objs[tileInstance.objs.indexOf(toDel)] = replacement.instances[0]
+            else
+                tileInstance.objs.remove(toDel)
+            return getKeyForInstance(tileInstance)
+        } else {
+            if (replacement != ObjectTreeItem(""))
+                tileInstance.objs[tileInstance.objs.indexOf(obj)] = replacement.instances[0]
+            else
+                tileInstance.objs.remove(obj)
+            return getKeyForInstance(tileInstance)
+        }
+    }
+
+    /**
+     * Moves an object to the top of an instance
+     * @param oldTileInstance Instance to be modified
+     * @param obj object to be moved to top
+     * @return Resulting key for the new instance
+     */
+    fun moveObjectToTopOfInstance(oldTileInstance: TileInstance, obj: ObjectInstance): String {
+        val tileInstance = TileInstance(oldTileInstance.objs.toMutableList())
+        tileInstance.objs.remove(obj)
+        tileInstance.objs.add(obj)
+        tileInstance.sortObjects()
+        return getKeyForInstance(tileInstance)
+    }
+
+    /**
+     * Moves an object to the bottom of an instance
+     * @param oldTileInstance Instance to be modified
+     * @param obj object to be moved to top
+     * @return Resulting key for the new instance
+     */
+    fun moveObjectToBottomOfInstance(oldTileInstance: TileInstance, obj: ObjectInstance): String {
+        val tileInstance = TileInstance(oldTileInstance.objs.toMutableList())
+        tileInstance.objs.remove(obj)
+        tileInstance.objs.add(0, obj)
+        tileInstance.sortObjects()
+        return getKeyForInstance(tileInstance)
+    }
+
+    fun replaceObjectInInstance(oldTileInstance: TileInstance, oldObj: ObjectInstance, newObj: ObjectInstance): String {
+        val tileInstance = TileInstance(oldTileInstance.objs.toMutableList())
+        if (!tileInstance.objs.contains(oldObj))
+            logger.error { "Tried to replace $oldObj, but it wasn't in the TileInstance" }
+        tileInstance.objs[tileInstance.objs.indexOf(oldObj)] = newObj
+        return getKeyForInstance(tileInstance)
+    }
 }
