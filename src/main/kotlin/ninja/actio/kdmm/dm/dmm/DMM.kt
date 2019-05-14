@@ -145,7 +145,7 @@ data class DMM(
         minY = newMinY
         minZ = newMinZ
 
-        val tileInstance = TileInstance.fromString("${objectTree.defaultTurf}, ${objectTree.defaultArea}")
+        val tileInstance = TileInstance.fromString("${objectTree.defaultTurf}, ${objectTree.defaultArea}", objectTree)
         val defaultInstance = getKeyForInstance(tileInstance)
 
         val toRemove = mutableSetOf<Location>()
