@@ -1,7 +1,9 @@
 package ninja.actio.kdmm.dm.dmm
 
 import mu.KotlinLogging
+import ninja.actio.kdmm.dm.objecttree.InstanceFactory
 import ninja.actio.kdmm.dm.objecttree.ObjectInstance
+import ninja.actio.kdmm.dm.objecttree.ObjectTree
 import ninja.actio.kdmm.dm.objecttree.ObjectTreeItem
 import kotlin.math.sign
 
@@ -12,8 +14,17 @@ data class TileInstance(
     var refCount: Int = 0
 ) {
     companion object {
-        fun fromString(string: String): TileInstance {
-            TODO()
+        fun fromString(string: String, tree: ObjectTree): TileInstance {
+            //Regex shamefully stolen from fastdmm
+            //matches modified types
+            val regex = Regex("[\\w/]+(?:\\{(?:\"(?:\\\\\"|[^\"])*?\"|[^\\}])*?\\})?(?=,|$)")
+            val objects = mutableListOf<ObjectInstance>()
+            val matches = regex.findAll(string)
+            for (match in matches) {
+                val type = InstanceFactory.parseStringToInstace(tree, match.groupValues[1])
+                objects.add(type)
+            }
+            return TileInstance(objects)
         }
     }
 
