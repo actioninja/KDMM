@@ -16,6 +16,7 @@ class LocationTests {
     @Test
     fun `Location step test`() {
         val location = Location(0, 0,0)
+        //EVERY POSSIBLE STEP
         val northStep = location.getStep(NORTH)
         val southStep = location.getStep(SOUTH)
         val eastStep = location.getStep(EAST)
