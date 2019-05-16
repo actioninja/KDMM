@@ -65,7 +65,7 @@ data class TileInstance(
                     b.isType("/obj") -> 1f
                     b.isType("/mob") -> 2f
                     b.isType("/turf") -> 3f
-                    b.isType("/turf") -> 4f
+                    b.isType("/area") -> 4f
                     else -> 0f
                 }
             }
@@ -87,7 +87,7 @@ data class TileInstance(
                 b.isType("/obj") -> 1
                 b.isType("/mob") -> 2
                 b.isType("/turf") -> 3
-                b.isType("/turf") -> 4
+                b.isType("/area") -> 4
                 else -> 0
             }
             Integer.compare(iA, iB)
