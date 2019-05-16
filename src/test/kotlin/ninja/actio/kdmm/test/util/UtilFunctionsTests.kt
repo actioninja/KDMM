@@ -1,6 +1,7 @@
 package ninja.actio.kdmm.test.util
 
 import ninja.actio.kdmm.dm.cleanPath
+import ninja.actio.kdmm.dm.reverseCase
 import ninja.actio.kdmm.dm.stripComments
 import org.junit.jupiter.api.Test
 import java.io.BufferedReader
@@ -49,5 +50,13 @@ class UtilFunctionsTests {
         assertEquals(goalPath, badPathPrefix)
         assertEquals(goalPath, badPathSuffix)
         assertEquals(goalPath, badPathBoth)
+    }
+
+    @Test
+    fun `String case reverser test`() {
+        assertEquals("AaBbCc", "aAbBcC".reverseCase())
+        assertEquals("09194581905819057", "09194581905819057".reverseCase())
+        assertEquals("!@#$%^&*()_+", "!@#$%^&*()_+".reverseCase())
+        assertEquals("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz", "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ".reverseCase())
     }
 }
